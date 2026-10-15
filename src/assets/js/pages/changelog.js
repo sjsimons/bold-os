@@ -25,6 +25,7 @@
     if (e.collection === 'skills') return 'skill.html?skill=' + encodeURIComponent(e.docId);
     if (e.collection === 'guides') return 'guide.html?guide=' + encodeURIComponent(e.docId);
     if (e.collection === 'handbook' && e.docId === 'boldiquette') return 'boldiquette.html';
+    if (e.collection === 'groupRotaSlots' && e.date && e.slotNumber) return 'group-meetings.html?date=' + encodeURIComponent(e.date) + '&slot=' + encodeURIComponent(e.slotNumber);
     return '';
   }
   function person(p){ return p ? (p.name || p.email || '') : ''; }

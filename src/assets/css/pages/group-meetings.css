@@ -1,0 +1,66 @@
+.rota-hero { max-width: 72rem; margin: 0 auto; padding: 64px 1.5rem 0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 2rem; }
+.rota-hero-copy { min-width: 0; }
+.rota-hero h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.14; overflow-wrap: break-word; }
+.rota-hero .hero-note { margin: 12px 0 0; font-size: 16px; color: var(--ink-soft); }
+.rota-hero-tools { display: grid; gap: .35rem; flex: 0 1 26rem; min-width: 0; margin-left: auto; }
+.rota-search-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-family: var(--sans); font-size: .85rem; }
+.rota-hero-tools input { width: 100%; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: .9rem var(--sans); }
+.rota-archive-link { white-space: nowrap; }
+.rota { max-width: 72rem; margin: 0 auto; padding: .75rem 1.5rem 24px; }
+.rota-actions, .rota-panel label, .rota-outcome { font-family: var(--sans); font-size: .85rem; }
+.rota-panel label { display: grid; gap: .35rem; }
+.rota-meeting { border-top: 1px solid var(--line); padding: 1rem 0; }
+.rota-meeting-head { position: relative; display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.rota-meeting-head.has-actions { padding-right: 2.5rem; }
+.rota-meeting-head h2, .rota-slot h3 { margin: 0; }
+.rota-meeting-head h2 { font-size: 1.35rem; font-weight: 600; line-height: 1.25; }
+.rota-meeting-head p { margin: 0; font-family: var(--sans); font-size: .82rem; color: var(--muted); }
+.rota-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; margin-top: 1rem; }
+.rota-slot { position: relative; border: 1px solid var(--line); background: rgba(255,255,255,.3); padding: .75rem 1rem 1rem; min-width: 0; }
+.rota-slot-head { display: flex; align-items: start; justify-content: space-between; gap: .6rem; padding-right: 2rem; }
+.rota-slot h3 { font-size: 1rem; font-weight: 600; line-height: 1.3; }
+.rota-outcome, .rota-muted { opacity: .7; }
+.rota-slot-content { display: flex; align-items: flex-start; gap: .75rem; margin-top: .5rem; min-width: 0; }
+.rota-avatar { position: relative; display: grid; place-items: center; flex: 0 0 3.5rem; width: 3.5rem; height: 3.5rem; overflow: hidden; border: 1px solid var(--line); border-radius: 50%; background: var(--wash); color: var(--ink-soft); font: 600 1.2rem/1 var(--sans); }
+.rota-avatar-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rota-avatar--open { background: transparent; color: var(--muted); font-size: 1.75rem; }
+.rota-slot-details { min-width: 0; overflow-wrap: anywhere; }
+.rota-slot-details p { margin: 0 0 .35rem; }
+.rota-slot-details .rota-person { margin-bottom: .1rem; font-weight: 600; }
+.rota-topic-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .5rem; }
+.rota-topic-row p { margin-bottom: 0; }
+.rota-slides { font-family: var(--sans); font-size: .78rem; white-space: nowrap; }
+.rota-actions { position: relative; flex: none; z-index: 2; }
+.rota-slot > .rota-actions { position: absolute; top: 1rem; right: 1rem; }
+.rota-meeting-head > .rota-actions { position: absolute; top: 0; right: 0; }
+.rota-actions-trigger { display: grid; place-items: center; width: 2rem; height: 2rem; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: transparent; color: var(--muted); font: 600 1.25rem/1 var(--sans); cursor: pointer; }
+.rota-actions-trigger:hover, .rota-actions-trigger:focus-visible, .rota-actions.is-open .rota-actions-trigger { color: var(--ink); background: var(--wash); }
+.rota-actions-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rota-actions-menu { position: absolute; top: 100%; right: 0; display: none; width: min(15rem, calc(100vw - 2rem)); padding: .3rem; border: 1px solid var(--line); background: var(--paper); box-shadow: 0 8px 20px rgba(26,43,74,.12); }
+.rota-actions:hover .rota-actions-menu, .rota-actions:focus-within .rota-actions-menu, .rota-actions.is-open .rota-actions-menu { display: grid; }
+.rota-actions-menu .btn-text { width: 100%; padding: .45rem .55rem; text-align: left; white-space: normal; }
+.rota-actions-menu .btn-text:hover:not(:disabled), .rota-actions-menu .btn-text:focus-visible { background: var(--wash); }
+.rota-actions-menu .btn-text:disabled { opacity: .45; cursor: not-allowed; }
+.rota-panel { border: 1px solid var(--line); background: var(--surface); padding: 1rem; margin: 1.5rem 0; max-width: 38rem; }
+.rota-panel form { display: grid; gap: 1rem; }
+.rota-panel input, .rota-panel select, .rota-panel textarea { width: 100%; box-sizing: border-box; }
+.rota-panel textarea { min-height: 6rem; }
+.rota-alert { border-left: 3px solid currentColor; padding: .6rem 1rem; }
+.rota-more { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: 1rem; font-family: var(--sans); font-size: .85rem; color: var(--muted); }
+.rota-manage { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; }
+.rota-manage summary { width: fit-content; font-family: var(--sans); font-size: .9rem; font-weight: 600; cursor: pointer; }
+.rota-manage summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.rota-manage-controls { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; margin-top: .75rem; }
+.rota-manage-controls .btn-text:disabled { opacity: .45; cursor: not-allowed; }
+.rota-changelog { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; }
+.rota-changelog summary { width: fit-content; font-family: var(--sans); font-size: .9rem; font-weight: 600; cursor: pointer; }
+.rota-changelog summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.rota-changelog-list { padding-left: 1.5rem; }
+.rota-changelog-list li { border-bottom: 1px solid var(--line); padding: .45rem 0; }
+.rota-changelog-list time { font-family: var(--sans); font-size: .8rem; color: var(--muted); }
+@media (max-width: 40rem) {
+  .rota-hero { display: block; padding: 44px 1rem 0; }
+  .rota-hero-tools { margin-top: 1.25rem; }
+  .rota { padding: .75rem 1rem 1rem; }
+  .rota-meeting-head { display: block; }
+}

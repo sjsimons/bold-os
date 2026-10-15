@@ -30,6 +30,7 @@ export default {
       { label: 'All projects', href: 'projects.html' },
       { label: 'Meetings', href: 'project-meetings.html' },
     ] },
+    { label: 'Group meetings', href: 'group-meetings.html', links: [] },
     // Its sub-pages are the released events (Firestore), filled in by bold.js.
     { label: 'Events', href: 'events.html', links: [], events: true },
     { label: 'ML Conference Cycle', href: 'how-to-submit-a-paper.html', links: [

@@ -65,6 +65,51 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Published group meeting records are server-written. A callable checks
+    // the actor, eligibility and revisions in the same transaction as edits.
+    match /groupMeetingSeasons/{id} {
+      allow read: if isLabMember();
+      allow write: if false;
+    }
+    match /groupMeetings/{date} {
+      allow read: if isLabMember();
+      allow write: if false;
+    }
+    match /groupRotaSlots/{id} {
+      allow read: if isLabMember();
+      allow write: if false;
+      match /versions/{version} {
+        allow read: if isLabMember();
+        allow write: if false;
+      }
+    }
+    match /groupRotaMembers/{slackId} {
+      allow read: if isLabMember();
+      allow write: if false;
+    }
+    match /groupRotaEligibility/{slackId} {
+      allow read, write: if false;
+    }
+    match /groupRotaSwaps/{id} {
+      allow get: if isAdmin() || (isLabMember() && (
+        get(/databases/$(database)/documents/people/$(resource.data.requesterSlackId)).data.email.lower() == email().lower() ||
+        get(/databases/$(database)/documents/people/$(resource.data.recipientSlackId)).data.email.lower() == email().lower()));
+      allow list, write: if false;
+    }
+    match /groupRotaDeclines/{id} {
+      allow get: if isAdmin() || (isLabMember() && resource.data.byEmail.lower() == email().lower());
+      allow list, write: if false;
+    }
+    match /groupRotaOffers/{id} {
+      allow read, write: if false;
+    }
+    match /groupRotaNotifications/{id} {
+      allow read, write: if false;
+    }
+    match /groupRotaConfig/{id} {
+      allow read, write: if false;
+    }
+
     match /boards/{boardId} {
       // A venue is either 'approved' (visible to the whole lab, same as
       // always) or 'pending' (a non-admin's proposal — visible only to
