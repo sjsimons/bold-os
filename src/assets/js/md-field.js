@@ -95,16 +95,6 @@ window.BoldMdField = (function(){
     if (!/^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(t) || !/<\/svg>$/i.test(t)) return null;
     try { return new File([t], 'diagram.svg', { type: 'image/svg+xml' }); } catch (e){ return null; }
   }
-  function call(args){ return firebase.app().functions('europe-west2').httpsCallable('markdownImage')(args); }
-  function put(url, f){
-    return new Promise(function(ok, no){
-      var x = new XMLHttpRequest();
-      x.open('PUT', url);
-      x.onload = function(){ var j = null; try { j = JSON.parse(x.responseText); } catch (e){} if (x.status < 300 && j && j.id) ok(j.id); else no(new Error('Google Drive said ' + x.status + '.')); };
-      x.onerror = function(){ no(new Error('The upload didn’t go through.')); };
-      x.send(f);
-    });
-  }
   // Writes `text` in place of the selection, as typing would (drafts and counters hear it).
   function insert(ta, text){
     var a = ta.selectionStart, b = ta.selectionEnd, v = ta.value;
@@ -126,21 +116,21 @@ window.BoldMdField = (function(){
     files = Array.prototype.filter.call(files || [], function(f){ return f; });
     if (!files.length || busy(ta) || ta.disabled || ta.readOnly) return;
     if (files.some(function(f){ return TYPES.indexOf(f.type) < 0 || f.size > MAX_MB * 1024 * 1024; })) { say(ta, 'Only PNG, JPEG, GIF, WebP or SVG images, up to ' + MAX_MB + ' MB.'); return; }
-    var one = files.length === 1;
+    var one = files.length === 1, caret = [ta.selectionStart, ta.selectionEnd];
     BOLD.confirmAlways({ title: one ? 'Upload ' + files[0].name + '?' : 'Upload ' + files.length + ' images?', go: 'Upload',
       effects: ['Put ' + (one ? 'it' : 'them') + ' on the lab’s Google Drive, where anyone with the link can see ' + (one ? 'it' : 'them')] }).then(function(ok){
       if (!ok) return;
       ta.setAttribute('data-mdf-busy', '1'); sync(ta);
+      // Where the caret was before the question took the focus.
+      if (caret[1] <= ta.value.length) { ta.focus(); ta.setSelectionRange(caret[0], caret[1]); }
       var n = 0;
       return files.reduce(function(chain, f){
         return chain.then(function(){
           var mark = '![Uploading ' + altOf(f.name) + '…]()';
           insert(ta, mark);
           say(ta, 'Uploading ' + (one ? f.name : (++n) + ' of ' + files.length) + '…');
-          return call({ name: f.name, type: f.type, size: f.size })
-            .then(function(r){ return put(r.data.url, f); })
-            .then(function(id){ return call({ file: id }); })
-            .then(function(r){ swap(ta, mark, '![' + altOf(f.name) + '](' + r.data.url + ')'); },
+          return BOLD.driveUpload('markdownImage', {}, f)
+            .then(function(d){ swap(ta, mark, '![' + altOf(f.name) + '](' + d.url + ')'); },
               function(err){ swap(ta, mark, ''); throw err; });
         });
       }, Promise.resolve()).then(function(){ say(ta, 'Uploaded: save to keep ' + (one ? 'it' : 'them') + '.'); }, function(err){

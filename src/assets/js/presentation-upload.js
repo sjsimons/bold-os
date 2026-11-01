@@ -1,7 +1,7 @@
 // Upload a presentation's file (slides, a poster, a PDF) to the lab's Google Drive and
 // put its link in the field: a project's presentation (pages/project.js), a talk
 // (pages/talk.js) and a keynote's or oral's talk (pages/session.js). The server opens an
-// upload to Drive (presentationFile), the browser sends the file there itself, then the
+// upload to Drive (presentationFile; BOLD.driveUpload), the browser sends the file there itself, then the
 // server makes it viewable by anyone with the link and returns that link. Saving the form
 // saves it.
 //
@@ -15,7 +15,6 @@ window.BoldPresentationUpload = (function(){
   function wire(line, o){
     if (!line) return;
     var btn = line.querySelector('.pu-btn'), file = line.querySelector('.pu-file'), msg = line.querySelector('.pu-msg');
-    var call = function(more){ return firebase.app().functions('europe-west2').httpsCallable('presentationFile')(Object.assign(o.args(), more)); };
     var say = function(t){ msg.textContent = t ? ' · ' + t : ''; };
     var busy = function(on){ btn.disabled = on; if (o.busy) o.busy(on); };
     btn.addEventListener('click', function(){ file.click(); });
@@ -30,17 +29,8 @@ window.BoldPresentationUpload = (function(){
     });
     function upload(f){
       busy(true); say('Starting…');
-      call({ name: f.name, type: f.type, size: f.size }).then(function(r){
-        return new Promise(function(ok, no){
-          var x = new XMLHttpRequest();
-          x.open('PUT', r.data.url);
-          x.upload.onprogress = function(e){ if (e.lengthComputable) say('Uploading ' + Math.round(100 * e.loaded / e.total) + '%'); };
-          x.onload = function(){ var j = null; try { j = JSON.parse(x.responseText); } catch (e){} if (x.status < 300 && j && j.id) ok(j.id); else no(new Error('Google Drive said ' + x.status + '.')); };
-          x.onerror = function(){ no(new Error('The upload didn’t go through.')); };
-          x.send(f);
-        });
-      }).then(function(id){ say('Sharing…'); return call({ file: id }); }).then(function(r){
-        o.input.value = r.data.url;
+      BOLD.driveUpload('presentationFile', o.args(), f, function(pc){ say(pc < 100 ? 'Uploading ' + pc + '%' : 'Sharing…'); }).then(function(d){
+        o.input.value = d.url;
         o.input.dispatchEvent(new Event('input', { bubbles: true }));
         say('Uploaded ' + f.name + ': save to keep it');
       }).catch(function(err){

@@ -53,6 +53,24 @@
     var t = e.target, f = t && t.tagName === 'IMG' && t.getAttribute('data-fallback');
     if (f) { t.removeAttribute('data-fallback'); t.src = f; }
   }, true);
+  // A file into the lab's Google Drive, through one of the callables that do it
+  // (presentationFile, markdownImage): the callable opens a resumable upload (args + the
+  // file's name, type and size → { url }), the browser sends the file there itself, then
+  // the callable shares it (args + { file: its id } → { url }). progress(0–100), optional.
+  // → Promise of that last reply's data.
+  BOLD.driveUpload = function(callable, args, file, progress){
+    var call = function(more){ return firebase.app().functions('europe-west2').httpsCallable(callable)(Object.assign({}, args, more)); };
+    return call({ name: file.name, type: file.type, size: file.size }).then(function(r){
+      return new Promise(function(ok, no){
+        var x = new XMLHttpRequest();
+        x.open('PUT', r.data.url);
+        if (progress) x.upload.onprogress = function(e){ if (e.lengthComputable) progress(Math.round(100 * e.loaded / e.total)); };
+        x.onload = function(){ var j = null; try { j = JSON.parse(x.responseText); } catch (e){} if (x.status < 300 && j && j.id) ok(j.id); else no(new Error('Google Drive said ' + x.status + '.')); };
+        x.onerror = function(){ no(new Error('The upload didn’t go through.')); };
+        x.send(file);
+      });
+    }).then(function(id){ return call({ file: id }); }).then(function(r){ return r.data; });
+  };
 
   /* ---------- copy boxes ---------- */
 
