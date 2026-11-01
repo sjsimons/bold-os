@@ -34,9 +34,9 @@ export default {
     { label: 'Research', href: 'projects.html', area: 'projects', areaWhat: 'list', links: [
       { label: 'Projects', href: 'projects.html', area: 'projects' },
       { label: 'Internal review', href: 'audit-board.html', area: 'ml-cycle' },
-      // Placeholders (soon): greyed out, no page yet.
-      { label: 'Problems bank', soon: true },
-      { label: 'Benchmarks', soon: true },
+      // To come, hidden for now (2026-11-01): a link with `soon: true` shows greyed out, with no page.
+      // { label: 'Problems bank', soon: true },
+      // { label: 'Benchmarks', soon: true },
     ] },
     { label: 'Calendar', href: 'calendar.html', links: [], separatorAfter: true, area: 'calendar' },
     { label: 'People', href: 'people.html', area: 'people', links: [
