@@ -187,7 +187,7 @@
     var head = '<h1>' + (s ? 'Edit ' + esc(s.title) : 'New event series') + '</h1>' +
       '<div class="event-form sr-form">' +
         '<label>Title<input type="text" class="sr-title" maxlength="120" value="' + esc(e.title) + '" placeholder="' + (once ? 'Festival' : 'Hamming Sessions') + '"></label>' +
-        '<label>What it’s for <span class="ev-hint">Markdown: **bold**, lists, [links](https://…)</span><textarea class="sr-desc" rows="5" maxlength="5000">' + esc(e.description) + '</textarea></label>' +
+        '<label>What it’s for <span class="ev-hint">Markdown: **bold**, lists, [links](https://…)</span><textarea class="sr-desc md-img" rows="5" maxlength="5000">' + esc(e.description) + '</textarea></label>' +
         '<label>How often<select class="sr-often">' + oftens.map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === e.often ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
     if (once) return head +
       '<div class="ev-row"><label>Starts<input type="date" class="sr-start1" value="' + esc(e.start || '') + '"></label>' +

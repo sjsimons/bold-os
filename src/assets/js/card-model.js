@@ -59,15 +59,21 @@
     return 'Characters remaining: ' + (ABSTRACT_MAX_CHARS - length);
   }
 
+  // Plain text of an abstract, escaped, with its images (![alt](https://…), #193) shown.
+  function abstractPlain(text){
+    var out = '', last = 0, m, re = new RegExp(BOLD.IMAGE.source, 'g');
+    while ((m = re.exec(text))){ out += BOLD.escapeHtml(text.slice(last, m.index)) + BOLD.imageHtml(m[1], m[2]); last = re.lastIndex; }
+    return out + BOLD.escapeHtml(text.slice(last));
+  }
   function renderAbstractHtml(text){
     if (!text) return '';
-    if (typeof katex === 'undefined') return BOLD.escapeHtml(text);
+    if (typeof katex === 'undefined') return abstractPlain(text);
     var out = '';
     var lastIndex = 0;
     var re = /\$\$([\s\S]+?)\$\$|\$([^\$\n]+?)\$/g;
     var m;
     while ((m = re.exec(text))){
-      out += BOLD.escapeHtml(text.slice(lastIndex, m.index));
+      out += abstractPlain(text.slice(lastIndex, m.index));
       var isBlock = m[1] !== undefined;
       var src = isBlock ? m[1] : m[2];
       try {
@@ -77,7 +83,7 @@
       }
       lastIndex = re.lastIndex;
     }
-    out += BOLD.escapeHtml(text.slice(lastIndex));
+    out += abstractPlain(text.slice(lastIndex));
     return out;
   }
 
@@ -86,7 +92,7 @@
   // in both places, 2026-09-18+32, per Eduardo).
   function abstractTextFieldHtml(text, disabledAttr){
     var len = (text || '').length;
-    return '<div class="field"><label for="stageAbstractText">Abstract</label><textarea id="stageAbstractText" class="no-tags" maxlength="' + ABSTRACT_MAX_CHARS + '"' + (disabledAttr || '') + ' placeholder="Paste the abstract text. LaTeX is fine, typed as plain text: $inline formula$ or $$block formula$$.">' + BOLD.escapeHtml(text || '') + '</textarea>' +
+    return '<div class="field"><label for="stageAbstractText">Abstract</label><textarea id="stageAbstractText" class="no-tags md-img" maxlength="' + ABSTRACT_MAX_CHARS + '"' + (disabledAttr || '') + ' placeholder="Paste the abstract text. LaTeX is fine, typed as plain text: $inline formula$ or $$block formula$$.">' + BOLD.escapeHtml(text || '') + '</textarea>' +
       '<div class="abstract-counter' + (len > ABSTRACT_MAX_CHARS ? ' over' : '') + '" id="stageAbstractCounter">' + abstractCounterText(len) + '</div>' +
       '<button class="btn-text" type="button" id="stageAbstractPreviewBtn" style="margin-top:6px;">Preview</button>' +
       '<div class="abstract-render abstract-preview" id="stageAbstractPreview" hidden></div>' +

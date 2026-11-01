@@ -32,6 +32,7 @@
 <script src="assets/js/search-box.js?v={{ build.stamp }}"></script>
 {% for script in scripts %}<script src="assets/js/{{ script }}?v={{ build.stamp }}"></script>
 {% endfor %}{% if not public %}<script src="assets/js/mentions.js?v={{ build.stamp }}"></script>
+<script src="assets/js/md-images.js?v={{ build.stamp }}"></script>
 {% endif %}
 </body>
 </html>

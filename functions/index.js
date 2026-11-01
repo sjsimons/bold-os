@@ -3683,6 +3683,59 @@ exports.presentationFile = onCall(
   }
 );
 
+// Images in Markdown (#193; md-images.js): an image or SVG pasted, dropped or chosen in a
+// Markdown box, uploaded into the lab's Drive, in its own folder. Anyone signed in.
+// { name, type, size } → { url }: a resumable upload session the browser sends the file
+// to (as presentationFile). { file } → { url }: once it's there, and it's an image of
+// theirs within the limit, anyone with the link can view it; url is its Drive link,
+// which the pages show as an image (BOLD.imageHtml).
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+const IMAGE_MAX = 10 * 1024 * 1024;
+async function imagesFolderId(){
+  const ref = db.collection('settings').doc('projectDrive');
+  const snap = await ref.get();
+  if (snap.exists && snap.data().imagesFolderId) return snap.data().imagesFolderId;
+  const f = await googleFetch('POST', DRIVE + '?fields=id', { name: 'BOLD.OS images', mimeType: 'application/vnd.google-apps.folder' });
+  await ref.set({ imagesFolderId: f.id }, { merge: true });
+  return f.id;
+}
+exports.markdownImage = onCall(
+  { secrets: [GOOGLE_OAUTH] },
+  async (request) => {
+    const email = callerEmail(request), data = request.data || {};
+    const owner = 'image:' + email;
+    if (data.file){
+      const id = String(data.file);
+      if (!/^[A-Za-z0-9_-]{10,100}$/.test(id)) throw new HttpsError('invalid-argument', 'No file given.');
+      const f = await googleFetch('GET', DRIVE + '/' + id + '?fields=id,mimeType,size,appProperties');
+      if (!f || !f.appProperties || f.appProperties.boldFor !== owner) throw new HttpsError('permission-denied', 'That file isn’t yours.');
+      if (IMAGE_TYPES.indexOf(f.mimeType) < 0 || !(Number(f.size) <= IMAGE_MAX)){
+        await googleFetch('DELETE', DRIVE + '/' + id).catch(() => null);
+        throw new HttpsError('invalid-argument', 'Only PNG, JPEG, GIF, WebP or SVG images, up to 10 MB.');
+      }
+      await googleFetch('POST', DRIVE + '/' + id + '/permissions', { type: 'anyone', role: 'reader' });
+      logger.info('markdownImage: uploaded', { file: id, type: f.mimeType, by: email });
+      return { url: 'https://drive.google.com/file/d/' + id + '/view' };
+    }
+    const name = String(data.name || '').replace(/[\u0000-\u001f]/g, '').slice(0, 200) || 'image', size = Number(data.size) || 0;
+    const type = String(data.type || '');
+    if (IMAGE_TYPES.indexOf(type) < 0) throw new HttpsError('invalid-argument', 'Only PNG, JPEG, GIF, WebP or SVG images.');
+    if (!size || size > IMAGE_MAX) throw new HttpsError('invalid-argument', 'Images up to 10 MB.');
+    const origin = String((request.rawRequest && request.rawRequest.headers.origin) || '');
+    const headers = { 'Authorization': 'Bearer ' + await googleToken(), 'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': type, 'X-Upload-Content-Length': String(size) };
+    if (UPLOAD_ORIGINS.indexOf(origin) >= 0) headers.Origin = origin;
+    const meta = { name, mimeType: type, parents: [await imagesFolderId()], appProperties: { boldFor: owner } };
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', { method: 'POST', headers, body: JSON.stringify(meta) });
+    const url = res.headers.get('location');
+    if (!res.ok || !url){
+      logger.warn('markdownImage: Drive refused the upload', { status: res.status, body: (await res.text()).slice(0, 300) });
+      throw new HttpsError('unavailable', 'Google Drive didn’t take the image — try again.');
+    }
+    return { url };
+  }
+);
+
 exports.projectWorkspace = onCall(
   { secrets: [GOOGLE_OAUTH, SLACK_BOT_TOKEN, GITHUB_APP], timeoutSeconds: 540 },
   async (request) => {

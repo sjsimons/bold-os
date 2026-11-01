@@ -40,6 +40,12 @@ window.BoldMarkdown = (function(){
   function inline(text){
     var codes = [];
     var s = mentions(esc(text).replace(/`([^`]+)`/g, function(_, c){ codes.push(c); return '\u0000' + (codes.length - 1) + '\u0000'; }));
+    // Images (BOLD.imageHtml), set aside like code so nothing formats their addresses.
+    var imgs = [];
+    s = s.replace(BOLD.IMAGE, function(all, alt, url){
+      imgs.push(BOLD.imageHtml(unesc(alt), unesc(url)));
+      return '\u0001' + (imgs.length - 1) + '\u0001';
+    });
     s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function(all, label, url){
       var u = safeUrl(url.replace(/&amp;/g, '&'));
       if (!u) return label;
@@ -56,8 +62,10 @@ window.BoldMarkdown = (function(){
     s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?!\w)/g, '$1<em>$2</em>')
       .replace(/~~([^~]+)~~/g, '<del>$1</del>');
-    return s.replace(/\u0000(\d+)\u0000/g, function(_, i){ return '<code>' + codes[+i] + '</code>'; });
+    return s.replace(/\u0000(\d+)\u0000/g, function(_, i){ return '<code>' + codes[+i] + '</code>'; })
+      .replace(/\u0001(\d+)\u0001/g, function(_, i){ return imgs[+i]; });
   }
+  function unesc(s){ return s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); }
 
   var ITEM = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
   var TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;

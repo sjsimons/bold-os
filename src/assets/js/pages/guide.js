@@ -254,7 +254,7 @@
       '<div class="guide-tabs gd-modes" role="tablist">' +
         '<button type="button" class="guide-tab gd-mode is-current" data-mode="write" role="tab" aria-selected="true">Write</button>' +
         '<button type="button" class="guide-tab gd-mode" data-mode="preview" role="tab" aria-selected="false">Preview</button></div>' +
-      '<textarea class="gd-body" rows="16" aria-label="Text">' + esc(p.body) + '</textarea>' +
+      '<textarea class="gd-body md-img" rows="16" aria-label="Text">' + esc(p.body) + '</textarea>' +
       '<div class="guide-text gd-preview-box" hidden></div>' +
       '<p class="event-form-hint">Markdown: **bold**, *italic*, [a link](https://…), lines starting with - or 1. for lists, a blank line between paragraphs, @ to tag someone.</p>' +
       noteHtml(isAdd ? 'e.g. Added a part on posters' : 'e.g. Clearer advice on ablations') +
@@ -481,7 +481,7 @@
         'Between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; Main</code> and <code>=======</code> is main’s text, then yours, to <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>. Keep what should stay and remove those lines.</p>' +
       (v.titleWas ? '<p class="event-form-hint">Main’s title for it is now “' + esc(v.titleWas) + '”.</p>' : '') +
       '<label>Title<input type="text" class="gd-r-title" maxlength="200" value="' + esc(v.title) + '"></label>' +
-      '<label>Text<textarea class="gd-r-body" rows="14" spellcheck="false">' + esc(v.text) + '</textarea></label>' +
+      '<label>Text<textarea class="gd-r-body md-img" rows="14" spellcheck="false">' + esc(v.text) + '</textarea></label>' +
       (v.error ? '<p class="ev-error">' + esc(v.error) + '</p>' : '') +
       '<div class="event-form-actions"><button type="button" class="ev-save gd-r-go">Continue</button><button type="button" class="ev-cancel gd-r-stop">Stop rebasing</button></div></div>';
   }
