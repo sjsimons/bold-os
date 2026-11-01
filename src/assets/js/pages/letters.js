@@ -182,7 +182,10 @@
       '<section class="lt-panel" id="applicant">' +
         (byMe.length ? '<ul class="lt-list">' + sorted(byMe).map(function(q){ return requestHtml(q, false); }).join('') + '</ul>' : '<p class="proj-msg">You haven’t asked for a letter yet.</p>') +
         '<div class="lt-new"><button type="button" class="event-add lt-ask">+ Ask for a letter</button></div></section>';
+    // letters.html#ask (the masthead's + menu) opens the form, on As applicant.
+    var ask = BOLD.takeLinkAction('ask', '#applicant');
     showTab();
+    if (ask) { openForm('new'); return; }
     var m = /#l=([A-Za-z0-9]+)/.exec(location.hash), el = m && document.getElementById('l-' + m[1]);
     if (el && !render.jumped && !shown[m[1]]) { shown[m[1]] = true; render(); return; }
     if (el && !render.jumped) { render.jumped = true; el.classList.add('is-target'); el.scrollIntoView({ block: 'start' }); }
@@ -204,7 +207,7 @@
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
   }
-  window.addEventListener('hashchange', function(){ if (byMe && ofMe) showTab(); });
+  window.addEventListener('hashchange', function(){ if (byMe && ofMe) { if (location.hash === '#ask') render(); else showTab(); } });
 
   // ---------- choosing the writer: a list of the BOLD.OS users, filtered by typing ----------
   function mountWho(wrap, form){

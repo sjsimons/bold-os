@@ -111,6 +111,8 @@
         '<ul class="lt-list">' + sorted(ofMe).map(function(q){ return requestHtml(q, true); }).join('') + '</ul></section>' : '') +
       (byMe.length ? '<section class="block"><div class="block-head"><h2>Your requests</h2></div>' +
         '<ul class="lt-list">' + sorted(byMe).map(function(q){ return requestHtml(q, false); }).join('') + '</ul></section>' : '');
+    // introductions.html#offer (the masthead's + menu) opens the form.
+    if (BOLD.takeLinkAction('offer')) { openForm('offer'); return; }
     if (focused) { var f = main.querySelector('.in-filter'); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }
     var m = /#i=([A-Za-z0-9]+)/.exec(location.hash), el = m && document.getElementById('i-' + m[1]);
     if (el && render.jumped !== m[1]) { render.jumped = m[1]; el.classList.add('is-target'); el.scrollIntoView({ block: 'start' }); }

@@ -259,8 +259,18 @@ footer{
 .mast-btn svg{width:16px; height:16px;}
 /* A change to this page's row waits. */
 .mast-btn.has-dot::after{content:''; position:absolute; top:-3px; right:-3px; width:8px; height:8px; border-radius:50%; background:var(--accent); border:2px solid var(--paper);}
+.mast-btn:disabled{opacity:.5; cursor:default; background:none; border-color:var(--line); color:var(--ink-soft);}
+/* The + menu (bold.js mountCreate): + and a caret; its list as the avatar's. */
+.mast-create{position:relative; display:flex;}
+.mast-create[hidden], .mast-bell[hidden]{display:none;}
+.mast-btn-wide{width:auto; padding:0 8px; display:inline-flex; gap:4px;}
+.mast-btn-wide svg + svg{width:9px; height:9px;}
+.mast-create-menu{width:230px;}
+.mast-menu-head{padding:8px 10px 3px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);}
+.mast-menu .mast-menu-head ~ .mast-menu-head{margin-top:4px; border-top:1px solid var(--line); padding-top:9px;}
+.mast-menu .is-off{display:block; padding:7px 10px; color:var(--muted); opacity:.6; cursor:default;}
 .mast-sep{width:1px; height:20px; background:var(--line); margin:0 4px;}
-.page-access[hidden] + .mast-sep, #authRegion:empty{display:none;}
+.mast-bell[hidden] + .mast-sep, #authRegion:empty{display:none;}
 .mast-search{margin-right:4px;}
 /* The search box (search-box.js): a menu of where to search under it, as the person picker's. */
 .mast-search{position:relative;}

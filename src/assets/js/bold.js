@@ -519,8 +519,64 @@
     drawAccess(); previewBar();
   }
 
+  // A link that opens a page's form (letters.html#ask, from the + menu): true once, when the
+  // page's #hash is it, which is then replaced by `keep` (a tab) or nothing.
+  BOLD.takeLinkAction = function(hash, keep){
+    if (location.hash !== '#' + hash) return false;
+    try { history.replaceState(null, '', location.pathname + location.search + (keep || '')); } catch (e){ location.hash = keep || ''; }
+    return true;
+  };
+
+  // The masthead's + menu, as GitHub's: everything one can start on the site, each greyed out
+  // with the reason where the viewer can't. `can` gives '' or the reason.
+  var pi = function(){ return BOLD.isFullWrite() ? '' : 'Only PIs and admins can do this'; };
+  var may = function(area, what){ return function(){ return BOLD.can(area, what) ? '' : BOLD.cannotReason(area, what); }; };
+  var CREATE = [
+    { head: 'New' },
+    { label: 'Project', href: 'projects-register.html', can: may('projects', 'edit') },
+    { label: 'Event series', href: 'series.html?new', can: may('events', 'edit') },
+    { label: 'Skill', href: 'skill.html?new', can: pi },
+    { label: 'Guide', href: 'guide.html?new', can: pi },
+    { label: 'Tool', href: 'tool.html?new', can: may('tools', 'edit') },
+    { head: 'Ask or offer' },
+    { label: 'Ask for a letter', href: 'letters.html#ask', can: may('service-desk', 'view') },
+    { label: 'Offer an introduction', href: 'introductions.html#offer', can: may('service-desk', 'view') },
+    { label: 'A paper for internal review', href: 'audit-board.html', can: may('ml-cycle', 'view') },
+  ];
+  var ICON_PLUS = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>';
+  var ICON_DOWN = '<svg viewBox="0 0 10 10" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5"/></svg>';
+  var ICON_BELL = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 11V7a4 4 0 0 1 8 0v4l1.2 1.5H2.8z"/><path d="M6.5 14a1.6 1.6 0 0 0 3 0"/></svg>';
+  function mountCreate(){
+    var box = document.getElementById('mastCreate');
+    if (!box) return;
+    box.innerHTML = '<button type="button" class="mast-btn mast-btn-wide" aria-haspopup="true" aria-expanded="false" aria-controls="createMenu" title="Create new…" aria-label="Create new…">' + ICON_PLUS + ICON_DOWN + '</button>' +
+      '<ul class="mast-menu mast-create-menu" id="createMenu" role="menu" hidden></ul>';
+    // Notifications, as GitHub's inbox: a placeholder until they exist.
+    var bell = document.getElementById('mastBell');
+    if (bell) bell.innerHTML = '<button type="button" class="mast-btn" disabled title="Notifications: coming soon" aria-label="Notifications: coming soon">' + ICON_BELL + '</button>';
+    var btn = box.querySelector('.mast-btn'), menu = box.querySelector('.mast-create-menu');
+    var draw = function(){
+      menu.innerHTML = CREATE.map(function(c){
+        if (c.head) return '<li role="none" class="mast-menu-head">' + esc(c.head) + '</li>';
+        var why = c.can();
+        return '<li role="none">' + (why ? '<span role="menuitem" class="is-off" aria-disabled="true" title="' + esc(why) + '">' + esc(c.label) + '</span>'
+          : '<a role="menuitem" href="' + esc(c.href) + '">' + esc(c.label) + '</a>') + '</li>';
+      }).join('');
+    };
+    var open = function(yes){ if (yes) draw(); menu.hidden = !yes; btn.setAttribute('aria-expanded', String(yes)); };
+    btn.addEventListener('click', function(e){ e.stopPropagation(); open(menu.hidden); });
+    document.addEventListener('click', function(e){ if (!box.contains(e.target)) open(false); });
+    document.addEventListener('focusin', function(e){ if (!box.contains(e.target)) open(false); });
+    box.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !menu.hidden) { open(false); btn.focus(); } });
+    // Signed in only, at once from the last sign-in, as the search.
+    var show = function(on){ box.hidden = !on; if (bell) bell.hidden = !on; };
+    show(!!hint);
+    BOLD.onUser(function(user){ show(!!user); });
+  }
+
   // Called right after the masthead markup.
   BOLD.mountMasthead = function(){
+    mountCreate();
     var region = document.getElementById('authRegion');
     // Paint the last visit's name at once; auth stays authoritative.
     if (hint) renderAuthRegion(region, { displayName: hint.n, email: hint.e, photoURL: hint.p });
