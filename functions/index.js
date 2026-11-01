@@ -2572,6 +2572,17 @@ function projectTitlesOnly(groups, mine){
   return out;
 }
 
+// Pure: marks the projects the caller is on (`mine`: their workspaces' ids, from `members`)
+// `joined`, for the Projects page's join button and its Yours filter; `v` 2 marks a list that
+// has them, so the page refetches an older cached one (tests/projects-join.test.cjs).
+function markJoined(shown, mine){
+  ['ongoing', 'submission', 'completed', 'planned'].forEach(function(g){
+    (shown[g] || []).forEach(function(i){ if (mine[i.pid]) i.joined = true; });
+  });
+  shown.v = 2;
+  return shown;
+}
+
 // Who sees a project in full (BOLDiquette › Who can see what › Projects): whoever has its
 // View, and its people (its workspace's `members`) whatever their group. Edit without View
 // sees the titles and joins (getAllProjects, projectTitles); firestore.rules hold to the same.
@@ -2607,9 +2618,7 @@ exports.getAllProjects = onCall(
     wsSnap.docs.forEach(function(d){ if ((d.data().members || []).indexOf(email) >= 0) mine[d.id] = true; });
     const shown = full ? groups : projectTitlesOnly(groups, mine);
     const items = shown.ongoing.concat(shown.submission, shown.completed, shown.planned);
-    // The ones the caller joined (its workspace's members), for Projects' Yours filter; `v` 2 marks a list that has them.
-    items.forEach(function(i){ if (mine[i.pid]) i.joined = true; });
-    shown.v = 2;
+    markJoined(shown, mine);
     const links = await slackLinksFor(Array.from(new Set(items.map(function(i){ return i.slackChannel; }).filter(Boolean))));
     items.forEach(function(i){ if (links[i.slackChannel]) i.slackUrl = links[i.slackChannel]; });
     return shown;
@@ -6882,7 +6891,7 @@ exports.reviewMcpChange = require('./reviewer')({ db, onDocumentWritten, logger,
   tellStaff }).reviewMcpChange;
 
 exports._internal = {
-  projectTitlesOnly, projectTitleDoc, githubLoginsFor, mergedEdit,
+  projectTitlesOnly, markJoined, projectTitleDoc, githubLoginsFor, mergedEdit,
   projectGroupForCard, allProjectsFromCards, closesIssues, githubWorkItem, requestColumn, proposalPlace, workRole, splitRequests, numberKey, repoNameOf, normalizeRepo, normalizeProjectChannel, keywordCounts, cappedGroup, roleGroup,
   flattenMessages, newMessages, cardEventsToNotify, homeRefreshTargetsForReviewers,
   newlyAddedAuthorEmails, reviewsOutCandidates, todayIsoLondon, venueUrl, cardUrl, linkedTitle,

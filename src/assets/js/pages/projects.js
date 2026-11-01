@@ -122,7 +122,8 @@
     var join = document.createElement('button');
     join.type = 'button';
     join.className = 'join-btn';
-    join.textContent = 'Join the project';
+    var st = window.BoldProjectJoin.joinState(p);
+    join.textContent = st.label; join.disabled = st.disabled; join.title = st.title;
     var wrap = document.createElement('div');
     wrap.className = 'join-wrap';
     wrap.appendChild(join);
@@ -153,9 +154,10 @@
       var slack = (res.data || {}).slack || {};
       btn.textContent = 'Joined';
       msg.textContent = slack.error || '';
+      p.joined = true;
+      cacheClear();   // the list cached before this says not joined
       // Its page is open to them now.
       if (p.titleOnly) {
-        cacheClear();
         var open = document.createElement('a');
         open.href = 'project.html#id=' + encodeURIComponent(p.projectId || p.cardId) + (p.boardId ? '&board=' + encodeURIComponent(p.boardId) : '');
         open.textContent = 'Open it';
