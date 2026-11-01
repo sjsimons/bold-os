@@ -28,21 +28,18 @@ export default {
   nav: [
     // Its sub-pages are BOLDiquette's sections (Firestore), filled in by bold.js.
     { label: 'BOLDiquette', href: 'boldiquette.html', links: [], handbook: true, area: 'boldiquette' },
-    { label: 'ML Conference Cycle', href: 'how-to-submit-a-paper.html', area: 'ml-cycle', links: [
-      { label: 'Guide', href: 'how-to-submit-a-paper.html' },
-    ] },
-    { label: 'Calendar', href: 'calendar.html', links: [], separatorAfter: true, area: 'calendar' },
-    { label: 'People', href: 'people.html', area: 'people', links: [
-      { label: 'Members', href: 'people.html' },
-      { label: 'Network', href: 'network.html' },
-      { label: 'Requests', href: 'join-requests.html', area: 'requests' },
-    ] },
     // Research: the projects and their papers' internal review. Shown with Projects (the
     // lower of the two; areaWhat list: its View or Edit, as Edit alone sees the titles, and
     // joins); Internal review has its own area.
     { label: 'Research', href: 'projects.html', area: 'projects', areaWhat: 'list', links: [
       { label: 'Projects', href: 'projects.html', area: 'projects' },
       { label: 'Internal review', href: 'audit-board.html', area: 'ml-cycle' },
+    ] },
+    { label: 'Calendar', href: 'calendar.html', links: [], separatorAfter: true, area: 'calendar' },
+    { label: 'People', href: 'people.html', area: 'people', links: [
+      { label: 'Members', href: 'people.html' },
+      { label: 'Network', href: 'network.html' },
+      { label: 'Requests', href: 'join-requests.html', area: 'requests' },
     ] },
     // Its sub-pages are the released events (Firestore), filled in by bold.js.
     { label: 'Events', href: 'events.html', links: [], events: true, area: 'events' },
