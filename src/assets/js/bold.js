@@ -358,7 +358,7 @@
     auth.onAuthStateChanged(function(user){
       current = user; authReady = true; skipConfirm = null;
       try {
-        if (user) localStorage.setItem('boldAuthHint', JSON.stringify({ n: user.displayName || '', e: user.email || '' }));
+        if (user) localStorage.setItem('boldAuthHint', JSON.stringify({ n: user.displayName || '', e: user.email || '', p: user.photoURL || '' }));
         else localStorage.removeItem('boldAuthHint');
       } catch (e){}
       listeners.slice().forEach(function(fn){ fn(user); });
@@ -382,7 +382,7 @@
     if (authReady) fn(current);
   };
 
-  // The last visit's { n: displayName, e: email }, or null — for painting before auth resolves.
+  // The last visit's { n: displayName, e: email, p: photoURL }, or null — for painting before auth resolves.
   BOLD.authHint = function(){ return hint; };
 
   // Sign-in redirects the page to Slack and back rather than using a popup:
@@ -425,12 +425,16 @@
   // PIs and admins only, shown once that's known; Sign out). Signed out: Sign in with Slack.
   function renderAuthRegion(region, user){
     if (user) {
-      // Your name only (your email is on your profile); without a name, the email.
-      var who = esc(user.displayName || user.email || 'Signed in');
+      // Your Slack photo (initials without one), as GitHub's avatar; your name heads its menu
+      // (your email is on your profile; without a name, the email).
+      var name = user.displayName || user.email || 'Signed in', who = esc(name);
+      var initials = esc(name.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(function(w){ return w[0].toUpperCase(); }).join(''));
+      var face = user.photoURL ? '<img class="mast-avatar" src="' + esc(user.photoURL) + '" alt="" referrerpolicy="no-referrer">' : '<span class="mast-avatar mast-initials">' + initials + '</span>';
       region.innerHTML =
         '<div class="mast-auth mast-menu-wrap">' +
-          '<button class="mast-auth-name mast-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mastMenu">' + who + ' <span class="mast-caret" aria-hidden="true">▾</span></button>' +
+          '<button class="mast-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mastMenu" aria-label="' + who + '’s menu" title="' + who + '">' + face + '</button>' +
           '<ul class="mast-menu" id="mastMenu" role="menu" hidden>' +
+            '<li role="none" class="mast-menu-who">Signed in as <strong>' + who + '</strong></li>' +
             '<li role="none"><a role="menuitem" href="profile.html">Profile</a></li>' +
             '<li role="none"><a role="menuitem" href="requests.html">Requests</a></li>' +
             '<li role="none" class="mast-menu-settings"' + (BOLD.isFullWrite() ? '' : ' hidden') + '><a role="menuitem" href="settings.html">Settings</a></li>' +
@@ -519,7 +523,7 @@
   BOLD.mountMasthead = function(){
     var region = document.getElementById('authRegion');
     // Paint the last visit's name at once; auth stays authoritative.
-    if (hint) renderAuthRegion(region, { displayName: hint.n, email: hint.e });
+    if (hint) renderAuthRegion(region, { displayName: hint.n, email: hint.e, photoURL: hint.p });
     BOLD.onUser(function(user){ renderAuthRegion(region, user); });
     // Settings, in the menu, once the viewer is known to be a PI or admin.
     BOLD.onAccess(function(a){
@@ -537,7 +541,9 @@
     var mast = document.getElementById('masthead'), box = mast && mast.querySelector('.mast-search');
     if (!box) return;
     var place = function(){
-      var main = document.querySelector('.shell-main'), first = main && main.querySelector('.hero, main');
+      // The page's first block: its hero, main or (the project page) detail, else the first shown.
+      var main = document.querySelector('.shell-main'), first = main && (main.querySelector('.hero, main, .detail') ||
+        Array.prototype.filter.call(main.children, function(c){ return c.tagName !== 'SCRIPT' && c.getBoundingClientRect().width; })[0]);
       var brand = mast.querySelector('.masthead-brand');
       if (!first || !brand || !first.getBoundingClientRect().width) { mast.classList.remove('is-search-left'); return; }
       var left = first.getBoundingClientRect().left + parseFloat(getComputedStyle(first).paddingLeft) - mast.getBoundingClientRect().left;
@@ -751,18 +757,18 @@
     }).join('') + '</div>';
   }
   var brOpen = false;   // the Version pill's list is open
-  var ICON_CARET = '<svg class="ac-caret" viewBox="0 0 10 10" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5"/></svg>';
   var ICON_BRANCH = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="4.5" cy="3.5" r="1.6"/><circle cx="4.5" cy="12.5" r="1.6"/><circle cx="11.5" cy="5.5" r="1.6"/><path d="M4.5 5.1v5.8M11.5 7.1c0 2.6-2.2 3.4-5.4 4.4"/></svg>';
   function drawAccess(){
     var el = document.getElementById('pageAccess'), area = pageArea();
     if (!el) return;
     if (!area || !AREA_NAMES[area] || !access || !access.e) { el.hidden = true; el.innerHTML = ''; return; }
     var cur = currentLevels(area);
-    var html = '<button type="button" class="ac-chip" aria-expanded="' + !!panel + '" aria-controls="acPanel" title="Who can see this page">' + ICON_EYE +
-      '<span>' + esc(groupName(cur.view)) + '</span>' + (waiting ? '<span class="ac-waiting">· 1 change waiting</span>' : '') + ICON_CARET + '</button>' +
-      // The Version pill (branches): main (the site as it is), or as an open proposal would make it.
-      '<button type="button" class="ac-chip br-chip' + (branch ? ' is-on' : '') + '" aria-expanded="' + brOpen + '" aria-controls="brPanel" title="See the site as an open proposal would make it">' + ICON_BRANCH +
-      '<span class="br-label">' + esc(branchLabel(branch)) + '</span>' + ICON_CARET + '</button>';
+    // In the masthead, as GitHub's icon buttons: who can see this page (a dot while a change
+    // to it waits), and the Version (branches): main, or the site as an open proposal would make it.
+    var seeTip = 'Who can see this page: ' + groupName(cur.view) + (waiting ? ' · 1 change waiting' : '');
+    var brTip = branch ? 'Version: ' + branchLabel(branch) : 'Version: main. See the site as an open proposal would make it';
+    var html = '<button type="button" class="mast-btn ac-chip' + (waiting ? ' has-dot' : '') + '" aria-expanded="' + !!panel + '" aria-controls="acPanel" title="' + esc(seeTip) + '" aria-label="' + esc(seeTip) + '">' + ICON_EYE + '</button>' +
+      '<button type="button" class="mast-btn ac-chip br-chip' + (branch ? ' is-on' : '') + '" aria-expanded="' + brOpen + '" aria-controls="brPanel" title="' + esc(brTip) + '" aria-label="' + esc(brTip) + '">' + ICON_BRANCH + '</button>';
     if (brOpen) {
       html += '<div class="ac-panel br-panel" id="brPanel" role="dialog" aria-label="Versions of the site"><div class="ac-title">Version</div>' +
         '<p class="ac-note">See the whole site as an open proposal would make it, before anyone accepts it. Only you see it, in this tab.</p>' +
