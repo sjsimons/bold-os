@@ -598,12 +598,23 @@
     var mast = document.getElementById('masthead'), box = mast && mast.querySelector('.mast-search');
     if (!box) return;
     var place = function(){
-      // The page's first block: its hero, main or (the project page) detail, else the first shown.
-      var main = document.querySelector('.shell-main'), first = main && (main.querySelector('.hero, main, .detail') ||
-        Array.prototype.filter.call(main.children, function(c){ return c.tagName !== 'SCRIPT' && c.getBoundingClientRect().width; })[0]);
+      // The page's first block: its hero, main or (the project page) detail. A page without
+      // one (the home page, centred) gets where a hero would start: the --content-max column,
+      // centred in what the sidebar leaves, inside its --gutter. So it's in one place everywhere.
+      var main = document.querySelector('.shell-main'), first = main && main.querySelector('.hero, main, .detail');
       var brand = mast.querySelector('.masthead-brand');
-      if (!first || !brand || !first.getBoundingClientRect().width) { mast.classList.remove('is-search-left'); return; }
-      var left = first.getBoundingClientRect().left + parseFloat(getComputedStyle(first).paddingLeft) - mast.getBoundingClientRect().left;
+      var mainBox = main && main.getBoundingClientRect();
+      if (!brand || !mainBox || !mainBox.width) { mast.classList.remove('is-search-left'); return; }
+      var left;
+      if (first && first.getBoundingClientRect().width) left = first.getBoundingClientRect().left + parseFloat(getComputedStyle(first).paddingLeft);
+      else {
+        var side = document.getElementById('sidebar'), sb = side && !side.hidden && side.getBoundingClientRect();
+        var from = Math.max(mainBox.left, sb && sb.width ? sb.right : 0), width = mainBox.right - from;
+        var cs = getComputedStyle(main), gutter = parseFloat(cs.getPropertyValue('--gutter')) || Math.min(48, Math.max(20, innerWidth * .04));
+        var max = parseFloat(cs.getPropertyValue('--content-max')) || 900;
+        left = from + Math.max(0, (width - max) / 2) + gutter;
+      }
+      left -= mast.getBoundingClientRect().left;
       var fits = left > brand.getBoundingClientRect().right - mast.getBoundingClientRect().left + 24;
       mast.classList.toggle('is-search-left', fits);
       mast.style.setProperty('--search-left', left + 'px');
@@ -818,8 +829,10 @@
   function drawAccess(){
     var el = document.getElementById('pageAccess'), area = pageArea();
     if (!el) return;
-    if (!area || !AREA_NAMES[area] || !access || !access.e) { el.hidden = true; el.innerHTML = ''; return; }
-    var cur = currentLevels(area);
+    // On every page for whoever is signed in, so the masthead is the same everywhere. A page
+    // that isn't in Who can see what (the home page) is for everyone signed in.
+    if (!access || !access.e) { el.hidden = true; el.innerHTML = ''; return; }
+    var row = !!(area && AREA_NAMES[area]), cur = row ? currentLevels(area) : { view: 'everyone', edit: 'everyone' };
     // In the masthead, as GitHub's icon buttons: who can see this page (a dot while a change
     // to it waits), and the Version (branches): main, or the site as an open proposal would make it.
     var seeTip = 'Who can see this page: ' + groupName(cur.view) + (waiting ? ' · 1 change waiting' : '');
@@ -837,7 +850,11 @@
         (branchError ? '<p class="ev-error">Couldn’t load the proposals — try again.</p>' : !branchList ? '<p class="ac-note">Loading…</p>' : !branchList.length ? '<p class="ac-note">No proposals are open.</p>' : '') +
         '<div class="ac-actions"><button type="button" class="btn-text br-close">Close</button></div></div>';
     }
-    if (panel) {
+    if (panel && !row) {
+      html += '<div class="ac-panel" id="acPanel" role="dialog" aria-label="Who can see this page"><div class="ac-title">Who can see this page</div>' +
+        '<p class="ac-sentence">Everyone signed in. It isn’t one of the pages in the BOLDiquette’s <a href="boldiquette.html#access">Who can see what</a>.</p>' +
+        viewAsHtml() + '<div class="ac-actions"><button type="button" class="btn-text ac-close">Close</button></div></div>';
+    } else if (panel) {
       var can = !!access.fullWrite, lv = panel.lv, changed = !sameLevels(lv, cur);
       html += '<div class="ac-panel" id="acPanel" role="dialog" aria-label="Who can see this page"><div class="ac-title">Who can see ' + esc(AREA_NAMES[area]) + '</div>';
       if (panel.done) html += '<p class="ac-sentence">Proposed. Another PI or admin accepts it on <a href="boldiquette.html#proposal-' + esc(panel.done) + '">the BOLDiquette</a>.</p>' +
@@ -847,12 +864,7 @@
           '<p class="ac-sentence">' + esc(sentence(lv)) + '</p>' +
           (REVIEWED.indexOf(area) >= 0 ? '<p class="ac-note">Edits here are proposals that a PI or admin reviews.</p>' : '') +
           (waiting && !changed ? '<p class="ac-note">Waiting: ' + esc(sentence(waiting.lv)) + ' <a href="boldiquette.html#proposal-' + esc(waiting.id) + '">See it on the BOLDiquette</a>.</p>' : '');
-        // View as: PIs and admins (and whoever is viewing as a group) see the site as a group.
-        if (can || access.viewAs) html += '<div class="ac-viewas" role="radiogroup" aria-label="View the site as"><span class="ac-what">View as</span>' +
-          VIEW_AS.slice().reverse().concat(['']).map(function(g){
-            var on = (access.viewAs || '') === g;
-            return '<button type="button" class="ac-as' + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + on + '" data-view-as="' + g + '" title="' + esc(g ? 'See the site as ' + LEVEL_NAMES[g] + ' sees it' : 'See the site as you') + '">' + esc(g === 'pan' ? 'PAN-BOLD' : g ? LADDER_HEAD[g] : 'Yourself') + '</button>';
-          }).join('') + '</div>';
+        html += viewAsHtml();
         if (!can) html += (access.viewAs ? '' : '<p class="ac-note">Only PIs and admins change this.</p>') + '<div class="ac-actions"><button type="button" class="btn-text ac-close">Close</button></div>';
         else html += (changed ? '<label class="ac-why">Why?<textarea class="ac-note-input" maxlength="1000" rows="2">' + esc(panel.note || '') + '</textarea></label>' : '') +
           '<p class="ev-error"' + (panel.error ? '' : ' hidden') + '>' + esc(panel.error || '') + '</p>' +
@@ -863,6 +875,15 @@
     }
     el.innerHTML = html;
     el.hidden = false;
+  }
+  // View as: PIs and admins (and whoever is viewing as a group) see the site as a group.
+  function viewAsHtml(){
+    if (!access.fullWrite && !access.viewAs) return '';
+    return '<div class="ac-viewas" role="radiogroup" aria-label="View the site as"><span class="ac-what">View as</span>' +
+      VIEW_AS.slice().reverse().concat(['']).map(function(g){
+        var on = (access.viewAs || '') === g;
+        return '<button type="button" class="ac-as' + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + on + '" data-view-as="' + g + '" title="' + esc(g ? 'See the site as ' + LEVEL_NAMES[g] + ' sees it' : 'See the site as you') + '">' + esc(g === 'pan' ? 'PAN-BOLD' : g ? LADDER_HEAD[g] : 'Yourself') + '</button>';
+      }).join('') + '</div>';
   }
   // For the BOLDiquette's list of proposed changes (pages/guide.js): a one-row proposal in
   // words, and the part with it applied.
@@ -926,7 +947,7 @@
       return;
     }
     if (t.classList.contains('ac-chip')) brOpen = false;
-    if (t.classList.contains('ac-chip')) panel = panel ? null : { lv: currentLevels(pageArea()), note: '' };
+    if (t.classList.contains('ac-chip')) panel = panel ? null : { lv: pageArea() && AREA_NAMES[pageArea()] ? currentLevels(pageArea()) : { view: 'everyone', edit: 'everyone' }, note: '' };
     else if (t.classList.contains('ac-close')) panel = null;
     else if (t.classList.contains('ac-cell')) setLevel(t.getAttribute('data-what'), t.getAttribute('data-level'));
     else if (t.classList.contains('ac-propose')) { proposeAccess(); return; }

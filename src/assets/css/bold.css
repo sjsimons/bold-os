@@ -154,7 +154,9 @@ footer{
 /* A page the viewer can't view (bold.js sidebarAccess): .nav-link's display beats [hidden]. */
 #sidebar .nav-link[hidden]{display:none;}
 /* A page still to come (site.js `soon`): greyed out, "Coming soon" on hover. */
-.nav-link.is-soon, .nav-link.is-soon:hover{color:var(--muted); opacity:.55; cursor:default;}
+.nav-link.is-soon, .nav-link.is-soon:hover{color:var(--muted); font-style:italic; cursor:default;}
+.nav-soon{display:inline-block; margin-left:4px; padding:0 5px; border:1px solid var(--line); border-radius:999px; font-size:9.5px; font-style:normal;
+  letter-spacing:.08em; text-transform:uppercase; line-height:15px; color:var(--muted); vertical-align:1px;}
 .nav-link.active{color:var(--accent); font-weight:600;}
 /* Sub-links collapse to nothing by default (padding included, so a group's
    gap to the next doesn't depend on how many hidden links it has) and expand on hover/focus

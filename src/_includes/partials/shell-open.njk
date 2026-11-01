@@ -18,7 +18,7 @@
         </div>
 {%- for link in group.links %}
 {%- if link.soon %}
-        <span class="nav-link nav-sub is-soon" aria-disabled="true" title="Coming soon">{{ link.label }}</span>
+        <span class="nav-link nav-sub is-soon" aria-disabled="true" title="Coming soon: not open yet">{{ link.label }} <span class="nav-soon">Soon</span></span>
 {%- else %}
         <a class="nav-link nav-sub{% if link.active %} active{% endif %}" href="{{ link.href }}"{% if link.area %} data-area="{{ link.area }}"{% endif %}>{{ link.label }}</a>
 {%- endif %}
