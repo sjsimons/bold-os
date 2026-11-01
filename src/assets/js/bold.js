@@ -535,9 +535,10 @@
     { head: 'New' },
     { label: 'Project', href: 'projects-register.html', can: may('projects', 'edit') },
     { label: 'Event series', href: 'series.html?new', can: may('events', 'edit') },
-    { label: 'Skill', href: 'skill.html?new', can: pi },
     { label: 'Guide', href: 'guide.html?new', can: pi },
-    { label: 'Tool', href: 'tool.html?new', can: may('tools', 'edit') },
+    // Skills and tools are both for agents (MCP): side by side, named so.
+    { label: 'Agent skill', href: 'skill.html?new', can: pi },
+    { label: 'Agent tool', href: 'tool.html?new', can: may('tools', 'edit') },
     { head: 'Ask or offer' },
     { label: 'Ask for a letter', href: 'letters.html#ask', can: may('service-desk', 'view') },
     { label: 'Offer an introduction', href: 'introductions.html#offer', can: may('service-desk', 'view') },
