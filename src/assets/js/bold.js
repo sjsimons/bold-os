@@ -37,7 +37,8 @@
   // Images in Markdown (#193): ![alt](https://…), as markdown.js and an abstract
   // (card-model.js) show them. A Drive file's link (what md-images.js uploads, or one
   // shared from Drive) shows its image; if Drive won't serve the file itself (an SVG,
-  // say), its preview. Clicking an image opens it. url: unescaped.
+  // say), its preview. Clicking an image opens it. Sent without a referrer: Google refuses
+  // images asked for from some pages (localhost: 429), and it needn't know the page. url: unescaped.
   BOLD.IMAGE = /!\[([^\]]*)\]\((https:\/\/[^)\s]+)\)/g;
   BOLD.driveId = function(url){
     var m = /^https:\/\/drive\.google\.com\/(?:file\/d\/([\w-]{10,100})|(?:open|uc)\?(?:[^#]*&)?id=([\w-]{10,100}))/.exec(String(url || ''));
@@ -46,7 +47,7 @@
   BOLD.imageHtml = function(alt, url){
     var id = BOLD.driveId(url);
     var src = id ? 'https://lh3.googleusercontent.com/d/' + id : url;
-    return '<a class="md-img-link" href="' + esc(url) + '" target="_blank" rel="noopener"><img class="md-img" src="' + esc(src) + '" alt="' + esc(alt) + '" loading="lazy"' +
+    return '<a class="md-img-link" href="' + esc(url) + '" target="_blank" rel="noopener"><img class="md-img" src="' + esc(src) + '" alt="' + esc(alt) + '" loading="lazy" referrerpolicy="no-referrer"' +
       (id ? ' data-fallback="' + esc('https://drive.google.com/thumbnail?id=' + id + '&sz=w1600') + '"' : '') + '></a>';
   };
   document.addEventListener('error', function(e){
