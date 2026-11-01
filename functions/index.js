@@ -3084,8 +3084,8 @@ async function unshareFile(id, email){
 
 function eventDescription(ws){
   const lines = ['<a href="' + projectPageUrl(ws.cardId, ws.boardId) + '">Project page</a>'];
-  if (ws.deckUrl) lines.push('<a href="' + ws.deckUrl + '">Slides</a>');
-  if (ws.notesUrl) lines.push('<a href="' + ws.notesUrl + '">Meeting notes</a>');
+  if (ws.ownDeckUrl || ws.deckUrl) lines.push('<a href="' + (ws.ownDeckUrl || ws.deckUrl) + '">Slides</a>');
+  if (ws.ownNotesUrl || ws.notesUrl) lines.push('<a href="' + (ws.ownNotesUrl || ws.notesUrl) + '">Meeting notes</a>');
   if (ws.slackChannel) lines.push('Slack: ' + ws.slackChannel);
   if (ws.meeting && ws.meeting.link) lines.unshift('Join: <a href="' + ws.meeting.link + '">' + ws.meeting.link + '</a>');
   return lines.join('<br>');
@@ -3146,7 +3146,7 @@ function projectGroupForCards(cards, completed, started){
 function workspaceView(ws){
   const out = {};
   ['cardId', 'boardId', 'venues', 'title', 'group', 'completedAt', 'startedAt', 'pausedAt', 'slackChannel', 'members', 'joined', 'meeting', 'eventLink', 'meetUrl',
-    'deckUrl', 'notesUrl', 'noDocs', 'skipped', 'slackSkipped', 'error', 'repo', 'repoName', 'repoUrl', 'repoError', 'work'].forEach(function(k){ if (ws[k] !== undefined) out[k] = ws[k]; });
+    'deckUrl', 'notesUrl', 'ownDeckUrl', 'ownNotesUrl', 'noDocs', 'skipped', 'slackSkipped', 'error', 'repo', 'repoName', 'repoUrl', 'repoError', 'work'].forEach(function(k){ if (ws[k] !== undefined) out[k] = ws[k]; });
   return out;
 }
 
@@ -3350,26 +3350,32 @@ async function syncWorkspace(id, changes){
 
     try {
       // Slides, then notes (which link the slides): saved as each is made, so a
-      // failure part way never makes the same file twice.
-      const folder = !ws.noDocs && (!ws.deckId || !ws.notesId) ? await projectFolderId() : null;
-      if (!ws.noDocs && !ws.deckId){
+      // failure part way never makes the same file twice. Not one the project has its
+      // own link for (ownDeckUrl, ownNotesUrl: the `links` action); a new one is shared
+      // with everyone again.
+      const makeDeck = !ws.noDocs && !ws.deckId && !ws.ownDeckUrl, makeNotes = !ws.noDocs && !ws.notesId && !ws.ownNotesUrl;
+      const folder = makeDeck || makeNotes ? await projectFolderId() : null;
+      if (makeDeck){
         const f = await createDeck(ws.title, folder);
-        patch.deckId = f.id; patch.deckUrl = f.webViewLink; await save();
+        patch.deckId = f.id; patch.deckUrl = f.webViewLink; patch.shared = []; await save();
       }
-      if (!ws.noDocs && !ws.notesId){
-        const f = await createNotes(ws.title, folder, { page: projectPageUrl(ws.cardId, ws.boardId), deck: ws.deckUrl });
-        patch.notesId = f.id; patch.notesUrl = f.webViewLink; await save();
+      if (makeNotes){
+        const f = await createNotes(ws.title, folder, { page: projectPageUrl(ws.cardId, ws.boardId), deck: ws.ownDeckUrl || ws.deckUrl });
+        patch.notesId = f.id; patch.notesUrl = f.webViewLink; patch.shared = []; await save();
       }
       // Each member's address for Google: their linked Google account, or their Slack email.
       const addrs = await googleAddressesFor(ws.members);
       // Files: shared with every member, unshared from whoever left.
       const shared = ws.shared || [];
-      for (const e of addrs.filter(function(m){ return ws.deckId && ws.notesId && shared.indexOf(m) < 0; })){
-        await shareFile(ws.deckId, e); await shareFile(ws.notesId, e);
+      // Only the ones BOLD.OS made: a project's own are its people's to share.
+      for (const e of addrs.filter(function(m){ return (ws.deckId || ws.notesId) && shared.indexOf(m) < 0; })){
+        if (ws.deckId) await shareFile(ws.deckId, e);
+        if (ws.notesId) await shareFile(ws.notesId, e);
         patch.shared = (ws.shared || []).concat(e); await save();
       }
       for (const e of shared.filter(function(m){ return addrs.indexOf(m) < 0; })){
-        await unshareFile(ws.deckId, e); await unshareFile(ws.notesId, e);
+        if (ws.deckId) await unshareFile(ws.deckId, e);
+        if (ws.notesId) await unshareFile(ws.notesId, e);
         patch.shared = ws.shared.filter(function(m){ return m !== e; }); await save();
       }
 
@@ -3744,6 +3750,22 @@ exports.projectWorkspace = onCall(
         if (ws.repoName) throw new HttpsError('failed-precondition', 'It already has ' + GITHUB_ORG + '/' + ws.repoName + '.');
       }
       return workspaceView(await syncWorkspace(pid, changes));
+    }
+
+    // Its own slides or notes (#151): a link in place of the one BOLD.OS makes; '' goes back
+    // to that one (made if there's none, unless it was left out). Only what's given changes.
+    if (data.action === 'links'){
+      if (!(await canEditCard(email, card))) throw new HttpsError('permission-denied', 'Only the project\u2019s submitter, authors, PIs and admins can do this.');
+      const set = {};
+      [['deck', 'ownDeckUrl', 'slides'], ['notes', 'ownNotesUrl', 'meeting notes']].forEach(function(k){
+        if (!(k[0] in data)) return;
+        const v = String(data[k[0]] || '').trim();
+        if (v && (v.length > 500 || !/^https:\/\/[^\s<>"]+$/.test(v))) throw new HttpsError('invalid-argument', 'The link to the ' + k[2] + ' must be a web address starting https://.');
+        set[k[1]] = v || FieldValue.delete();
+      });
+      if (!Object.keys(set).length) throw new HttpsError('invalid-argument', 'No link given.');
+      await wsRef.set(set, { merge: true });
+      return workspaceView(await syncWorkspace(pid));
     }
 
     if (data.action === 'pause' || data.action === 'resume'){

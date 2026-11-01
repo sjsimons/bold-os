@@ -611,7 +611,7 @@ module.exports = function(deps){
       members: (w.members || []).map((e) => ({ name: name(e), profile: profile(e) })),
       slack_channel: card.slackChannel || '',
       meeting: w.meeting ? meetingText(w.meeting) + (w.pausedAt ? ' (paused)' : '') : '', meet_url: w.meetUrl || '',
-      slides: w.deckUrl || '', notes: w.notesUrl || '', repository: w.repoUrl || '',
+      slides: w.ownDeckUrl || w.deckUrl || '', notes: w.ownNotesUrl || w.notesUrl || '', repository: w.repoUrl || '',
       links: { overleaf: card.overleafLink || '', arxiv: card.arxivLink || '', pitch: card.pitchLink || '', submission: card.submissionLink || '', camera_ready: card.cameraReadyLink || '' },
       presentations, work,
     };

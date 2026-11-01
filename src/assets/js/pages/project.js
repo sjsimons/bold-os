@@ -366,6 +366,32 @@ function escapeHtml(s){ return BOLD.escapeHtml(s); }
     return ' <button class="btn-text detail-inline-edit" type="button" data-ws="' + action + '"' + (wsBusy || !wsLoaded ? ' disabled' : '') + '>' + label + '</button>';
   }
 
+  // Editing the slides' or notes' link: yours, or (empty) the one BOLD.OS makes.
+  var LINKS = { deck: { own: 'ownDeckUrl', made: 'deckUrl', what: 'slides' }, notes: { own: 'ownNotesUrl', made: 'notesUrl', what: 'meeting notes' } };
+  function linkEntryHtml(key){
+    var k = LINKS[key], cur = ws && ws[k.own] || '';
+    return '<input type="url" id="linkInput" value="' + esc(cur) + '" placeholder="https://\u2026 your own ' + k.what + ' (Google Slides, Overleaf, Notion…)">' +
+      '<p class="event-form-hint">' + (ws && ws[k.made] ? 'Leave it empty to use the ' + k.what + ' BOLD.OS made.' : ws && ws.noDocs ? 'Leave it empty for none.' : 'Leave it empty and BOLD.OS makes them, shared with the project\u2019s members.') + '</p>';
+  }
+  function saveLink(){
+    var key = editing, k = LINKS[key], fail = failer(), v = el('linkInput').value.trim();
+    if (v && !/^https:\/\/\S+$/.test(v)) return fail('A web address starting https://');
+    if (v === (ws && ws[k.own] || '')) { editing = false; render(); return; }
+    var effects = [];
+    if (ws && ws.eventId) effects.push('Change the link in the meeting\u2019s Google Calendar invitation: Google may email its guests');
+    if (!v && ws && !ws[k.made] && !ws.noDocs) effects.push('Make the ' + k.what + ' on Google Drive, shared with the project\u2019s members');
+    (effects.length ? BOLD.confirmAction({ title: v ? 'Use your own ' + k.what + '?' : 'Use the ' + k.what + ' BOLD.OS makes?', go: 'Save', effects: effects }) : Promise.resolve(true)).then(function(ok){
+      if (!ok) return;
+      el('linkSave').disabled = true;
+      var args = { action: 'links' }; args[key] = v;
+      return callWorkspace(args).then(function(){ editing = false; render(); });
+    }).catch(function(err){
+      console.error('[BOLD Lab] saving the link failed', err);
+      if (el('linkSave')) el('linkSave').disabled = false;
+      fail((err && err.message) || 'Could not save \u2014 try again.');
+    });
+  }
+
   // The workspace's rows: meeting, slides, notes.
   function workspaceRows(){
     var setting = ws && ws.syncing, failed = ws && ws.error;
@@ -373,7 +399,8 @@ function escapeHtml(s){ return BOLD.escapeHtml(s); }
       : setting ? '<span class="detail-muted">Setting up\u2026</span>'
       : failed ? '<span class="detail-muted">' + esc(ws.error) + '</span>'
       : missing();
-    var retry = wsLoaded && !setting && (failed || !ws || !ws.deckUrl)
+    var deck = ws && (ws.ownDeckUrl || ws.deckUrl), notes = ws && (ws.ownNotesUrl || ws.notesUrl);
+    var retry = wsLoaded && !setting && (failed || !ws || !deck)
       ? ' <button class="btn-text detail-inline-edit" type="button" data-ws="setUp"' + (canEdit() && !wsBusy ? '' : ' disabled title="' + NOT_EDITOR + '"') + '>' + (failed ? 'Try again' : 'Set up') + '</button>'
       : '';
     var m = ws && ws.meeting;
@@ -390,10 +417,12 @@ function escapeHtml(s){ return BOLD.escapeHtml(s); }
       : wsLoaded && !setting ? missing() + skipped('meeting') : state;
     var html = editableRow('meeting', 'Meeting', meeting, '',
       meetingEntryHtml(m) + (m ? '<button class="btn-text danger" type="button" id="meetingRemove">Remove the meeting</button>' : ''), 'meetingSave');
-    html += row('Slides', ws && ws.deckUrl ? openLink(ws.deckUrl) : state + (ws && ws.noDocs ? skipped('docs') : '') + retry);
-    html += row('Meeting notes', ws && ws.notesUrl ? openLink(ws.notesUrl) : failed ? missing() : state);
+    // Slides and notes: the ones BOLD.OS makes, or the project's own (#151), each with Edit.
+    var own = ' <span class="detail-muted">\u00b7 your own</span>';
+    html += editableRow('deck', 'Slides', deck ? openLink(deck) + (ws.ownDeckUrl ? own : '') : state + (ws && ws.noDocs ? skipped('docs') : '') + retry, '', linkEntryHtml('deck'), 'linkSave');
+    html += editableRow('notes', 'Meeting notes', notes ? openLink(notes) + (ws.ownNotesUrl ? own : '') : failed ? missing() : state, '', linkEntryHtml('notes'), 'linkSave');
     // Set up part way (shared with some members, say): the error and Try again stay.
-    if (failed && ws.deckUrl && !setting) html += row('Setting up', '<span class="detail-muted">' + esc(ws.error) + '</span>' + retry);
+    if (failed && deck && !setting) html += row('Setting up', '<span class="detail-muted">' + esc(ws.error) + '</span>' + retry);
     return html;
   }
 
@@ -975,6 +1004,8 @@ function escapeHtml(s){ return BOLD.escapeHtml(s); }
     } else if (editing === 'repo') {
       wireRepoEntry();
       el('repoSave').addEventListener('click', saveRepo);
+    } else if (editing === 'deck' || editing === 'notes') {
+      el('linkSave').addEventListener('click', saveLink);
     } else if (editing === 'meeting') {
       el('meetingSave').addEventListener('click', function(){ saveMeeting(false); });
       if (el('meetingRemove')) el('meetingRemove').addEventListener('click', function(){ saveMeeting(true); });
