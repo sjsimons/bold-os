@@ -18,7 +18,7 @@
     if (!cache[key]) cache[key] = call({ action: 'get', slackId: key }).catch(function(){ delete cache[key]; return { state: 'missing' }; });
     cache[key].then(function(data){
       if (node.dataset.photoVersion !== version) return;
-      if (data.state !== 'active' || !data.image || !/^image\/(jpeg|png|webp)$/.test(data.type)) return;
+      if (data.state !== 'active' || !data.image || !/^image\/(jpeg|png|webp|gif)$/.test(data.type)) return;
       var img = document.createElement('img');
       img.alt = '';
       img.onload = function(){ if (node.dataset.photoVersion === version) { node.textContent = ''; node.appendChild(img); } };

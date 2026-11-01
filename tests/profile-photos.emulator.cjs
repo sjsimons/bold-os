@@ -80,6 +80,10 @@ async function ruleRequest(path, method, auth, body) {
   mode = 'ok'; assert.equal((await service.importSlack('UOTHER', false)).state, 'active');
   await assert.rejects(service.replace('UOTHER', Buffer.alloc(257 * 1024).toString('base64')));
   await assert.rejects(slackImage(mockFetch, 'http://127.0.0.1/photo'));
+  const gif = Buffer.from('GIF89a' + 'synthetic');
+  const gravatar = await slackImage(() => Promise.resolve(new Response(gif, { headers: { 'content-type': 'image/gif' } })), 'https://secure.gravatar.com/avatar/synthetic');
+  assert.equal(gravatar.type, 'image/gif');
+  await assert.rejects(service.replace('UOTHER', gif.toString('base64')));
   await db.collection('profilePhotos').doc('UOTHER').delete();
   const beforeRace = files.size;
   const race = await Promise.all([service.importSlack('UOTHER', false), service.importSlack('UOTHER', false)]);

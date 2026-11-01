@@ -368,7 +368,8 @@ download URLs cannot bypass member access. The authenticated `profilePhoto`
 callable reads bytes, and resolves the writer from verified Slack identity and
 the `people` roster. It checks Profile view/edit for own operations and People
 view for another member's photo. Manual files are JPEG, PNG or WebP up to
-256 KB. Slack files are fetched on the server from Slack HTTPS hosts with
+256 KB. Slack files (including bounded GIFs) are fetched on the server from
+Slack HTTPS hosts or Slack-documented `secure.gravatar.com` with
 bounded redirects and size. An import claim plus versioned Storage path
 prevents two logins or a racing manual replacement from overwriting the
 chosen photo. Removal records an opt-out so automatic import cannot restore

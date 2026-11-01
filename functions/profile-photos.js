@@ -4,19 +4,21 @@ const crypto = require('crypto');
 
 const MAX_BYTES = 256 * 1024;
 const MAX_REDIRECTS = 3;
-const IMAGE_HOST = /(^|\.)(slack-edge\.com|slack\.com)$/i;
+// Slack's user object also documents secure.gravatar.com image URLs.
+const IMAGE_HOST = /(^|\.)(slack-edge\.com|slack\.com)$|^secure\.gravatar\.com$/i;
 
 function imageType(bytes) {
   if (bytes.length >= 3 && bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) return 'image/jpeg';
   if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))) return 'image/png';
   if (bytes.length >= 12 && bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  if (bytes.length >= 6 && /^GIF8[79]a$/.test(bytes.toString('ascii', 0, 6))) return 'image/gif';
   return '';
 }
 
-function checkedImage(bytes, advertisedType) {
+function checkedImage(bytes, advertisedType, allowGif) {
   if (!bytes || !bytes.length || bytes.length > MAX_BYTES) throw new Error('Photo must be 256 KB or smaller.');
   const type = imageType(bytes);
-  if (!type || (advertisedType && advertisedType.split(';')[0].trim().toLowerCase() !== type)) throw new Error('Use a JPEG, PNG or WebP image.');
+  if (!type || (!allowGif && type === 'image/gif') || (advertisedType && advertisedType.split(';')[0].trim().toLowerCase() !== type)) throw new Error('Use a JPEG, PNG or WebP image.');
   return type;
 }
 
@@ -34,7 +36,7 @@ async function slackImage(fetcher, url) {
     const length = Number(response.headers.get('content-length') || 0);
     if (length > MAX_BYTES) throw new Error('Slack image too large.');
     const advertised = response.headers.get('content-type') || '';
-    if (!/^image\/(jpeg|png|webp)(;|$)/i.test(advertised)) throw new Error('Slack did not return an image.');
+    if (!/^image\/(jpeg|png|webp|gif)(;|$)/i.test(advertised)) throw new Error('Slack did not return an image.');
     const reader = response.body.getReader();
     const chunks = []; let size = 0;
     for (;;) {
@@ -45,7 +47,7 @@ async function slackImage(fetcher, url) {
       chunks.push(Buffer.from(value));
     }
     const bytes = Buffer.concat(chunks);
-    return { bytes, type: checkedImage(bytes, advertised) };
+    return { bytes, type: checkedImage(bytes, advertised, true) };
   }
 }
 

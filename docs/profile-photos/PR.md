@@ -25,6 +25,12 @@
   retry, removal opt-out, deliberate Slack refresh, and denied client writes.
   They check signed-out, non-Slack, owner, and another member against
   Firestore and Storage rules, plus an Admin SDK Storage write.
+- With dummy values in ignored `functions/.secret.local`,
+  `NODE_OPTIONS="--require=$(pwd)/tests/profile-photos.mock-slack.cjs" firebase emulators:exec --only firestore,storage,functions --project demo-test 'node tests/profile-photos.callable.emulator.cjs'`.
+  The preload intercepts Slack requests. This exercises first-login import,
+  repeated import, manual replacement, authenticated reads, denied reads and
+  writes, removal, and opt-out through the deployed callable shape and real
+  emulator Storage writes. No call reaches Slack.
 - Static local HTML/CSS fixture rendered at 1365 px and 500 px in headless
   Chrome, with synthetic names, no scripts and no external requests.
 
@@ -39,3 +45,9 @@ The client needs `profilePhoto` and the new Firestore/Storage rules deployed
 together by a Firebase maintainer after review. Do not deploy a bare Firebase
 target or enable Hosting. This PR does not change production Firebase, Slack,
 or member data.
+
+After the named function and rules are deployed, a maintainer still needs one
+consenting account's live smoke check: verify its Slack photo imports, that
+Profile and People load it, and that Replace, Remove and Use Slack photo work.
+Local emulators cannot prove the live Slack bot's exact scopes or production
+Auth and Storage configuration. Do not bulk-import other members for this check.

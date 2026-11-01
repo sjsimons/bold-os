@@ -47,7 +47,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const photoService = createPhotoService({
   db, bucket: { file: path => admin.storage().bucket().file(path) }, fetcher: fetch,
-  token: () => SLACK_BOT_TOKEN.value(), FieldValue: admin.firestore.FieldValue,
+  token: () => SLACK_BOT_TOKEN.value(), FieldValue: require('firebase-admin/firestore').FieldValue,
 });
 
 // ---------- View as (#172) and branches (#177): a PI or admin previews the site ----------
