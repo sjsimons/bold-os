@@ -575,9 +575,49 @@
     BOLD.onUser(function(user){ show(!!user); });
   }
 
+  // Yours (as GitHub's "Your repositories"): links to the pages that list what's yours,
+  // filtered to you (projects.html#mine, events.html#mine), and your own pages.
+  var ICON_MINE = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M8 2 14 5 8 8 2 5z"/><path d="M2 8l6 3 6-3"/><path d="M2 11l6 3 6-3"/></svg>';
+  var MINE = [
+    { label: 'Your projects', href: 'projects.html#mine', area: 'projects' },
+    { label: 'Your events', href: 'events.html#mine', area: 'events' },
+    { sep: true },
+    { label: 'Your letters', href: 'letters.html', area: 'service-desk' },
+    { label: 'Your introductions', href: 'introductions.html', area: 'service-desk' },
+  ];
+  function mountMine(){
+    var box = document.getElementById('mastMine');
+    if (!box) return;
+    box.innerHTML = '<button type="button" class="mast-btn" aria-haspopup="true" aria-expanded="false" aria-controls="mineMenu" title="Yours" aria-label="Yours">' + ICON_MINE + '</button>' +
+      '<ul class="mast-menu mast-mine-menu" id="mineMenu" role="menu" hidden></ul>';
+    var btn = box.querySelector('.mast-btn'), menu = box.querySelector('.mast-mine-menu');
+    var draw = function(){
+      menu.innerHTML = MINE.map(function(c){
+        if (c.sep) return '<li role="separator" class="mast-menu-sep"></li>';
+        var why = c.area && BOLD.can && !BOLD.can(c.area, 'view') ? BOLD.cannotReason(c.area, 'view') : '';
+        return '<li role="none">' + (why ? '<span role="menuitem" class="is-off" aria-disabled="true" title="' + esc(why) + '">' + esc(c.label) + '</span>'
+          : '<a role="menuitem" href="' + esc(c.href) + '">' + esc(c.label) + '</a>') + '</li>';
+      }).join('');
+    };
+    var open = function(yes){ if (yes) draw(); menu.hidden = !yes; btn.setAttribute('aria-expanded', String(yes)); };
+    btn.addEventListener('click', function(e){ e.stopPropagation(); open(menu.hidden); });
+    document.addEventListener('click', function(e){ if (!box.contains(e.target)) open(false); });
+    document.addEventListener('focusin', function(e){ if (!box.contains(e.target)) open(false); });
+    box.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !menu.hidden) { open(false); btn.focus(); } });
+    // Already on the page a link goes to: following it applies the filter there.
+    menu.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a'); if (!a) return;
+      var u = new URL(a.href, location.href);
+      if (u.pathname === location.pathname && u.hash) { e.preventDefault(); open(false); location.hash = u.hash; location.reload(); }
+    });
+    box.hidden = !hint;
+    BOLD.onUser(function(user){ box.hidden = !user; if (!user) open(false); });
+  }
+
   // Called right after the masthead markup.
   BOLD.mountMasthead = function(){
     mountCreate();
+    mountMine();
     var region = document.getElementById('authRegion');
     // Paint the last visit's name at once; auth stays authoritative.
     if (hint) renderAuthRegion(region, { displayName: hint.n, email: hint.e, photoURL: hint.p });

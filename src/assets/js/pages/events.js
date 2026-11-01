@@ -7,11 +7,12 @@
 // organises it, marked Hidden, until they release it.
 // "+ Add a new event series" (series.html?new: once, or recurring) is for Events' Edit level
 // (BOLDiquette › Who can see what): always shown, greyed out for everyone else.
+// Yours (#mine, the masthead's Yours): the series you organise and the events you added.
 (function(){
   var esc = BOLD.escapeHtml;
   var E = window.BoldEvents;
   var root = document.getElementById('eventList');
-  var search = document.getElementById('evSearch');
+  var search = document.getElementById('evSearch'), who = document.getElementById('evWho');
   var seriesAdds = Array.prototype.slice.call(document.querySelectorAll('.series-add'));
   if (!root || !BOLD.getAuth()) return;
   var db = null;
@@ -53,16 +54,27 @@
     seriesAdds.forEach(function(a){ a.classList.toggle('is-off', !can); a.title = why; a.setAttribute('aria-disabled', String(!can)); });
     if (events === null) return;
     var q = search.value.trim().toLowerCase();
-    var hit = function(x){ return !q || [x.title, x.place, x.description].join(' ').toLowerCase().indexOf(q) !== -1; };
+    var yours = who && who.value === 'mine' && me, mail = me ? me.email.toLowerCase() : '';
+    var hit = function(x){
+      if (yours && !(String(x.createdBy || '').toLowerCase() === mail || (x.organisers || []).indexOf(mail) >= 0)) return false;
+      return !q || [x.title, x.place, x.description].join(' ').toLowerCase().indexOf(q) !== -1;
+    };
     // A series' occurrences are under it; an occurrence whose series this person can't see stays listed.
     var known = {};
     series.forEach(function(x){ known[x.id] = 1; });
     var evs = events.filter(function(x){ return !(x.series && known[x.series]); }).filter(hit), ss = series.filter(hit);
     var once = evs.slice().sort(function(a, b){ return a.startDate < b.startDate ? 1 : -1; });
     var html = (ss.length ? '<ul class="proj-list ev-series">' + ss.map(seriesRow).join('') + '</ul>' : '') + group('Once', once.map(eventRow));
-    root.innerHTML = html || '<p class="proj-msg">' + (q ? 'Nothing matches.' : 'No events yet.') + '</p>';
+    root.innerHTML = html || '<p class="proj-msg">' + (q || yours ? 'Nothing matches.' : 'No events yet.') + '</p>';
   }
   search.addEventListener('input', render);
+  if (who) {
+    if (location.hash === '#mine') who.value = 'mine';
+    who.addEventListener('change', function(){
+      try { history.replaceState(null, '', location.pathname + location.search + (who.value ? '#mine' : '')); } catch (e){}
+      render();
+    });
+  }
   BOLD.onAccess(function(){ render(); });
 
   seriesAdds.forEach(function(a){ a.addEventListener('click', function(e){ if (!canAdd()) e.preventDefault(); }); });

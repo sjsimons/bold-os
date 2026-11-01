@@ -268,7 +268,11 @@ footer{
 .mast-btn:disabled{opacity:.5; cursor:default; background:none; border-color:var(--line); color:var(--ink-soft);}
 /* The + menu (bold.js mountCreate): + and a caret; its list as the avatar's. */
 .mast-create{position:relative; display:flex;}
-.mast-create[hidden], .mast-bell[hidden]{display:none;}
+.mast-create[hidden], .mast-bell[hidden], .mast-mine[hidden]{display:none;}
+/* Yours (bold.js mountMine): links to what's yours, as the + menu. */
+.mast-mine{position:relative; display:flex;}
+.mast-mine-menu{width:200px;}
+.mast-menu-sep{margin:4px 0; border-top:1px solid var(--line);}
 .mast-btn-wide{width:auto; padding:0 8px; display:inline-flex; gap:4px;}
 .mast-btn-wide svg + svg{width:9px; height:9px;}
 .mast-create-menu{width:230px;}

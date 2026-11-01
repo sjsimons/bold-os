@@ -180,6 +180,7 @@
   var current = null;                                  // the last list from the function
   var filters = { q: '', author: '', keyword: '' };
   var autoTab = false;                                 // arrived with a filter: open a tab that has matches
+  var wantMine = false, myKey = '';                    // #mine: the author filter set to you, once known; kept as #mine
 
   // Older cached lists have no `authors`, or no `submission` group; refetch those.
   function hasAuthors(d){
@@ -241,7 +242,7 @@
     var tab = tabs.filter(function(t){ return t.classList.contains('active'); })[0];
     var parts = [];
     if (tab && tab.getAttribute('data-tab') !== 'ongoing') parts.push(tab.getAttribute('data-tab'));
-    ['q', 'author', 'keyword'].forEach(function(k){ if (filters[k]) parts.push(k + '=' + encodeURIComponent(filters[k])); });
+    ['q', 'author', 'keyword'].forEach(function(k){ if (filters[k]) parts.push(k === 'author' && filters.author === myKey ? 'mine' : k + '=' + encodeURIComponent(filters[k])); });
     try { history.replaceState(null, '', location.pathname + location.search + (parts.length ? '#' + parts.join('&') : '')); } catch (e){}
   }
 
@@ -345,20 +346,24 @@
     });
   });
 
-  // #planned opens that tab; #keyword=rl, #author=<email>, #q=text (joined with &) set the filters.
+  // #planned opens that tab; #keyword=rl, #author=<email>, #q=text (joined with &) set the filters;
+  // #mine (the masthead's Yours) sets the author filter to whoever is signed in.
   try {
     (location.hash || '').slice(1).split('&').forEach(function(tok){
       var kv = tok.split('=');
+      if (tok === 'mine') { wantMine = autoTab = true; return; }
       if (kv.length === 1 && tabs.some(function(t){ return t.getAttribute('data-tab') === tok; })) return setTab(tok);
       if (kv[0] === 'q' || kv[0] === 'author' || kv[0] === 'keyword') filters[kv[0]] = decodeURIComponent(kv.slice(1).join('='));
     });
     el('projSearch').value = filters.q;
-    autoTab = filtering();
+    autoTab = autoTab || filtering();
   } catch (e){}
 
   function renderPage(user){
     if (!user) { cacheClear(); return; }
     if (!user.email) return;
+    myKey = String(user.email).toLowerCase();
+    if (wantMine) { wantMine = false; filters.author = myKey; syncHash(); }
     loadCached('getAllProjects', user.email, renderProjects, function(){
       el('projMsg').textContent = 'Could not load projects.';
     }, hasAuthors);
