@@ -14,7 +14,8 @@
 // Images (#193): pasting or dropping an image or an SVG (a file, or an SVG's own text),
 // or choosing one, uploads it to the lab's Google Drive (functions/index.js markdownImage)
 // and writes ![name](its Drive link) at the caret; BOLD.imageHtml shows it. Anyone with
-// the link can see it, so it asks every time (the ground rule).
+// the link can see it, so it asks every time (the ground rule). An image the lab already
+// has (the same file, by its SHA-256) isn't uploaded again: its link is used, unasked.
 window.BoldMdField = (function(){
   var esc = BOLD.escapeHtml;
   var TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
@@ -112,32 +113,58 @@ window.BoldMdField = (function(){
   }
   function altOf(name){ return String(name || 'image').replace(/\.[a-z0-9]+$/i, '').replace(/[\[\]\n]/g, ' ').slice(0, 80) || 'image'; }
 
+  // The file's SHA-256 (hex), to find the copy the lab already has; '' if the browser can't.
+  function hashOf(f){
+    if (!(window.crypto && crypto.subtle && f.arrayBuffer)) return Promise.resolve('');
+    return f.arrayBuffer().then(function(b){ return crypto.subtle.digest('SHA-256', b); }).then(function(d){
+      return Array.prototype.map.call(new Uint8Array(d), function(x){ return ('0' + x.toString(16)).slice(-2); }).join('');
+    }).catch(function(){ return ''; });
+  }
+  // Each image is kept once on the lab's Drive (functions/index.js imageHashes): one it
+  // already has is written at once, its link from there; only new ones are asked about
+  // and uploaded. All in the order given.
   function upload(ta, files){
     files = Array.prototype.filter.call(files || [], function(f){ return f; });
     if (!files.length || busy(ta) || ta.disabled || ta.readOnly) return;
     if (files.some(function(f){ return TYPES.indexOf(f.type) < 0 || f.size > MAX_MB * 1024 * 1024; })) { say(ta, 'Only PNG, JPEG, GIF, WebP or SVG images, up to ' + MAX_MB + ' MB.'); return; }
-    var one = files.length === 1, caret = [ta.selectionStart, ta.selectionEnd];
-    BOLD.confirmAlways({ title: one ? 'Upload ' + files[0].name + '?' : 'Upload ' + files.length + ' images?', go: 'Upload',
-      effects: ['Put ' + (one ? 'it' : 'them') + ' on the lab’s Google Drive, where anyone with the link can see ' + (one ? 'it' : 'them')] }).then(function(ok){
-      if (!ok) return;
-      ta.setAttribute('data-mdf-busy', '1'); sync(ta);
-      // Where the caret was before the question took the focus.
-      if (caret[1] <= ta.value.length) { ta.focus(); ta.setSelectionRange(caret[0], caret[1]); }
-      var n = 0;
-      return files.reduce(function(chain, f){
-        return chain.then(function(){
-          var mark = '![Uploading ' + altOf(f.name) + '…]()';
-          insert(ta, mark);
-          say(ta, 'Uploading ' + (one ? f.name : (++n) + ' of ' + files.length) + '…');
-          return BOLD.driveUpload('markdownImage', {}, f)
-            .then(function(d){ swap(ta, mark, '![' + altOf(f.name) + '](' + d.url + ')'); },
-              function(err){ swap(ta, mark, ''); throw err; });
+    var caret = [ta.selectionStart, ta.selectionEnd];
+    var done = function(){ ta.removeAttribute('data-mdf-busy'); sync(ta); };
+    ta.setAttribute('data-mdf-busy', '1'); sync(ta); say(ta, 'Checking…');
+    var find = firebase.app().functions('europe-west2').httpsCallable('markdownImage');
+    Promise.all(files.map(function(f){
+      return hashOf(f).then(function(h){ return h ? find({ find: h }) : { data: {} }; })
+        .then(function(r){ return { f: f, url: r.data && r.data.url || '' }; }, function(){ return { f: f, url: '' }; });
+    })).then(function(items){
+      var fresh = items.filter(function(x){ return !x.url; }), one = fresh.length === 1;
+      var ask = !fresh.length ? Promise.resolve(true) : BOLD.confirmAlways({ title: one ? 'Upload ' + fresh[0].f.name + '?' : 'Upload ' + fresh.length + ' images?', go: 'Upload',
+        effects: ['Put ' + (one ? 'it' : 'them') + ' on the lab’s Google Drive, where anyone with the link can see ' + (one ? 'it' : 'them')] });
+      return ask.then(function(ok){
+        // Where the caret was before the question took the focus.
+        if (caret[1] <= ta.value.length) { ta.focus(); ta.setSelectionRange(caret[0], caret[1]); }
+        var n = 0, sent = 0;
+        return items.reduce(function(chain, x){
+          return chain.then(function(){
+            var alt = altOf(x.f.name);
+            if (x.url) { insert(ta, '![' + alt + '](' + x.url + ')'); return; }
+            if (!ok) return;
+            var mark = '![Uploading ' + alt + '…]()';
+            insert(ta, mark);
+            say(ta, 'Uploading ' + (one ? x.f.name : (++n) + ' of ' + fresh.length) + '…');
+            return BOLD.driveUpload('markdownImage', {}, x.f)
+              .then(function(d){ sent++; swap(ta, mark, '![' + alt + '](' + d.url + ')'); },
+                function(err){ swap(ta, mark, ''); throw err; });
+          });
+        }, Promise.resolve()).then(function(){
+          var reused = items.length - fresh.length;
+          var m = (sent ? 'Uploaded' : '') + (sent && reused ? '; ' : '') + (reused ? (reused === 1 ? 'one image was' : reused + ' images were') + ' already on the lab’s Drive' : '') +
+            (sent || reused ? ': save to keep ' + (sent + reused === 1 ? 'it' : 'them') + '.' : '');
+          say(ta, m.charAt(0).toUpperCase() + m.slice(1));
         });
-      }, Promise.resolve()).then(function(){ say(ta, 'Uploaded: save to keep ' + (one ? 'it' : 'them') + '.'); }, function(err){
-        console.error('[BOLD] uploading an image failed', err);
-        say(ta, err && err.message && err.code !== 'functions/internal' ? err.message : 'Couldn’t upload it — try again.');
-      }).then(function(){ ta.removeAttribute('data-mdf-busy'); sync(ta); });
-    });
+      });
+    }).catch(function(err){
+      console.error('[BOLD] uploading an image failed', err);
+      say(ta, err && err.message && err.code !== 'functions/internal' ? err.message : 'Couldn’t upload it — try again.');
+    }).then(done);
   }
   function imagesIn(dt){ return Array.prototype.filter.call((dt && dt.files) || [], function(f){ return /^image\//.test(f.type); }); }
   function box(t){ return t && t.tagName === 'TEXTAREA' && t.classList.contains('md-field') ? t : null; }

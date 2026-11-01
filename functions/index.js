@@ -3689,6 +3689,10 @@ exports.presentationFile = onCall(
 // to (as presentationFile). { file } → { url }: once it's there, and it's an image of
 // theirs within the limit, anyone with the link can view it; url is its Drive link,
 // which the pages show as an image (BOLD.imageHtml).
+// Each image is kept once: `imageHashes/{sha256}` (server only) → { file, url }, from
+// Drive's own sha256Checksum of the uploaded file. { find: sha256 } → { url } of the copy
+// the lab already has (still on Drive), or {}: the page then uses it, uploading nothing.
+// An upload that turns out to be a copy (two at once) is deleted for the one there.
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
 const IMAGE_MAX = 10 * 1024 * 1024;
 async function imagesFolderId(){
@@ -3704,18 +3708,40 @@ exports.markdownImage = onCall(
   async (request) => {
     const email = callerEmail(request), data = request.data || {};
     const owner = 'image:' + email;
+    const known = async function(hash){
+      if (!/^[0-9a-f]{64}$/.test(hash)) return null;
+      const ref = db.collection('imageHashes').doc(hash), snap = await ref.get();
+      if (!snap.exists) return null;
+      const f = await googleFetch('GET', DRIVE + '/' + snap.data().file + '?fields=id,trashed').catch(() => null);
+      if (f && !f.trashed) return snap.data();
+      await ref.delete();
+      return null;
+    };
+    if (data.find !== undefined){
+      const k = await known(String(data.find));
+      return k ? { url: k.url } : {};
+    }
     if (data.file){
       const id = String(data.file);
       if (!/^[A-Za-z0-9_-]{10,100}$/.test(id)) throw new HttpsError('invalid-argument', 'No file given.');
-      const f = await googleFetch('GET', DRIVE + '/' + id + '?fields=id,mimeType,size,appProperties');
+      const f = await googleFetch('GET', DRIVE + '/' + id + '?fields=id,mimeType,size,sha256Checksum,appProperties');
       if (!f || !f.appProperties || f.appProperties.boldFor !== owner) throw new HttpsError('permission-denied', 'That file isn’t yours.');
       if (IMAGE_TYPES.indexOf(f.mimeType) < 0 || !(Number(f.size) <= IMAGE_MAX)){
         await googleFetch('DELETE', DRIVE + '/' + id).catch(() => null);
         throw new HttpsError('invalid-argument', 'Only PNG, JPEG, GIF, WebP or SVG images, up to 10 MB.');
       }
+      const hash = String(f.sha256Checksum || '').toLowerCase();
+      const there = hash && await known(hash);
+      if (there && there.file !== id){
+        await googleFetch('DELETE', DRIVE + '/' + id).catch(() => null);
+        logger.info('markdownImage: a copy, kept once', { file: there.file, by: email });
+        return { url: there.url };
+      }
       await googleFetch('POST', DRIVE + '/' + id + '/permissions', { type: 'anyone', role: 'reader' });
+      const url = 'https://drive.google.com/file/d/' + id + '/view';
+      if (hash) await db.collection('imageHashes').doc(hash).set({ file: id, url, type: f.mimeType, by: email, at: Date.now() });
       logger.info('markdownImage: uploaded', { file: id, type: f.mimeType, by: email });
-      return { url: 'https://drive.google.com/file/d/' + id + '/view' };
+      return { url };
     }
     const name = String(data.name || '').replace(/[\u0000-\u001f]/g, '').slice(0, 200) || 'image', size = Number(data.size) || 0;
     const type = String(data.type || '');
