@@ -41,9 +41,14 @@ const { setGlobalOptions } = require('firebase-functions/v2');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const { createPhotoService } = require('./profile-photos');
 
 admin.initializeApp();
 const db = admin.firestore();
+const photoService = createPhotoService({
+  db, bucket: { file: path => admin.storage().bucket().file(path) }, fetcher: fetch,
+  token: () => SLACK_BOT_TOKEN.value(), FieldValue: admin.firestore.FieldValue,
+});
 
 // ---------- View as (#172) and branches (#177): a PI or admin previews the site ----------
 // The browser (bold.js) adds `viewAs` (a group: the eye chip's View as) and `branch` (an
@@ -2352,6 +2357,35 @@ exports.getMyAccess = onCall(
     // viewAs: the group a PI or admin is viewing the site as (View as), so the page says so.
     const as = viewingAs(email);
     return Object.assign({ fullWrite, group, pages }, as ? { viewAs: as } : {});
+  }
+);
+
+// Portrait bytes are returned only through this authenticated callable, never
+// through Storage download tokens. The writer is resolved from Slack sign-in.
+exports.profilePhoto = onCall(
+  { secrets: [SLACK_BOT_TOKEN], timeoutSeconds: 30, memory: '512MiB' },
+  async request => {
+    const email = signedInEmail(request).toLowerCase();
+    const data = request.data || {};
+    try {
+      if (data.action === 'get') {
+        const ownId = await photoService.owner(email).catch(() => '');
+        await access.requireAccess(email, data.slackId === ownId ? 'profile' : 'people', 'view');
+        return photoService.read(data.slackId);
+      }
+      await access.requireAccess(email, 'profile', data.action === 'mine' || data.action === 'ensure' ? 'view' : 'edit');
+      const id = await photoService.owner(email);
+      if (data.action === 'mine') return { slackId: id, photo: await photoService.read(id) };
+      if (data.action === 'ensure') return { slackId: id, result: await photoService.importSlack(id, false) };
+      if (data.action === 'slack') return { slackId: id, result: await photoService.importSlack(id, true) };
+      if (data.action === 'replace') return { slackId: id, result: await photoService.replace(id, data.image) };
+      if (data.action === 'remove') return { slackId: id, result: await photoService.remove(id) };
+      throw new HttpsError('invalid-argument', 'Unknown photo action.');
+    } catch (err) {
+      if (err instanceof HttpsError) throw err;
+      logger.warn('profilePhoto failed', { action: data.action, error: String(err && err.message || err) });
+      throw new HttpsError('failed-precondition', String(err && err.message || 'Could not update photo.'));
+    }
   }
 );
 

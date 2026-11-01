@@ -153,3 +153,13 @@ Every push to `main` builds and deploys automatically via `.github/workflows/pag
 If the process moved relative to BOLDiquette, update `docs/DIFF.md` (and `docs/proposed-boldiquette-addition.md` if the drop-in prose is affected).
 
 `docs/changelog.md` stays as a historical record up to 2026-09-14, but is no longer kept up — per Eduardo, stop adding entries to it.
+# Shared profile pictures (proposed)
+
+`functions/profile-photos.js` handles verified-owner import, manual replace,
+remove and opt-out. `profilePhoto` in `functions/index.js` is the only callable
+entry point. The first authenticated page load calls `ensure` in the background
+from `bold.js`; failures do not block sign-in. `src/assets/js/profile-photo.js`
+renders a private callable response or initials, and is used by Profile,
+People and each person's page. People loads visible portraits as they scroll
+into view. `profilePhotos/{slackId}` metadata and the private Storage prefix
+are described in `docs/FIREBASE.md`.

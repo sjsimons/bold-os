@@ -356,3 +356,25 @@ The old "Subscribable deadline feed" TODO item was blocked for as long as this w
 
 Every rule that let any signed-in member read or write (`isLabMember()`) now asks the BOLDiquette's table first: `may(area, what)` (`firebase/firestore.rules`), with the viewer's group from `members/{email}.category` (PIs and admins: BOLD-exec) and the table from `settings/access`, which only `decideProposal` writes, from the BOLDiquette's `access` part. Each check costs up to two extra document reads per request (the member and the table; repeated reads of the same document in one request count once). Nothing is readable without signing in; Everyone in the table means everyone signed in (the same as PAN-BOLD). Collection-group rules (`{path=**}/…`) are no more open than the page that lists them, since rules that match the same document add up. Callables check the same through `functions/access.js` (`requireAccess`), and so does the agents' API. Details: `docs/REFERENCE.md`, "Who can see what".
 
+# Shared profile pictures (proposed)
+
+`profilePhotos/{slackId}` is server-managed metadata: `state` (`active` or
+`removed`), `path`, `type`, `source` (`slack` or `manual`), and `updatedAt`.
+The server may also hold a short-lived `pending` import claim. Objects live at
+`profile-photos/{slackId}/{random version}` in Storage. Neither path contains
+a name or email address. Metadata is readable when Who can see what permits
+People; client writes are denied. Storage denies client reads and writes so
+download URLs cannot bypass member access. The authenticated `profilePhoto`
+callable reads bytes, and resolves the writer from verified Slack identity and
+the `people` roster. It checks Profile view/edit for own operations and People
+view for another member's photo. Manual files are JPEG, PNG or WebP up to
+256 KB. Slack files are fetched on the server from Slack HTTPS hosts with
+bounded redirects and size. An import claim plus versioned Storage path
+prevents two logins or a racing manual replacement from overwriting the
+chosen photo. Removal records an opt-out so automatic import cannot restore
+it. No existing photo is automatically refreshed when Slack changes.
+
+The meeting rota is still on a separate branch. When rebased, it can use
+the shared photo helper for presenters while retaining `groupRotaPhotos` as a
+fallback. The offline preview keeps local portraits and makes no shared-photo
+request. No legacy portraits are copied in this PR.

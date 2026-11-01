@@ -357,6 +357,18 @@
     } catch (e){ auth = null; return null; }
     auth.onAuthStateChanged(function(user){
       current = user; authReady = true; skipConfirm = null;
+      // Import once per signed-in session in the background. Failure remains
+      // retryable on a later page and never blocks the auth gate.
+      if (user && user.uid) {
+        try {
+          var photoKey = 'boldPhotoEnsured:' + user.uid;
+          if (!sessionStorage.getItem(photoKey)) {
+            firebase.app().functions('europe-west2').httpsCallable('profilePhoto')({ action: 'ensure' })
+              .then(function(){ sessionStorage.setItem(photoKey, '1'); window.dispatchEvent(new Event('bold-photo-updated')); })
+              .catch(function(err){ console.info('[BOLD Lab] Photo import will retry later:', err && err.message); });
+          }
+        } catch (e){}
+      }
       try {
         if (user) localStorage.setItem('boldAuthHint', JSON.stringify({ n: user.displayName || '', e: user.email || '', p: user.photoURL || '' }));
         else localStorage.removeItem('boldAuthHint');

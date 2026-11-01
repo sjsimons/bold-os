@@ -8,6 +8,13 @@
   var db;
   try { db = firebase.firestore(BOLD.getApp()); } catch (e){ return; }
   var members = null, unsub = null, staff = false, me = null, picking = '', slackIds = {};
+  var photoObserver = 'IntersectionObserver' in window ? new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      photoObserver.unobserve(entry.target);
+      BOLD.photo.mount(entry.target, entry.target.dataset.id, entry.target.dataset.name);
+    });
+  }, { rootMargin: '200px' }) : null;
 
   function links(t){
     return String(t || '').split(/[\s,;]+/).filter(Boolean).map(function(u){
@@ -29,14 +36,16 @@
       : '<button type="button" class="type-badge pp-' + cat + ' pp-open" data-email="' + esc(m.email) + '" title="Change ' + esc(m.name || m.email) + '’s group">' + esc(BoldJoin.categoryLabel(cat)) + '</button>';
     var sid = slackIds[String(m.email || '').toLowerCase()];
     var name = sid ? '<a class="proj-title" href="person.html?id=' + encodeURIComponent(sid) + '">' + esc(m.name || m.email) + '</a>' : '<span class="proj-title">' + esc(m.name || m.email) + '</span>';
-    return '<li><div>' + name + (m.pronouns ? ' <span class="acct-handle">' + esc(m.pronouns) + '</span>' : '') + ' ' + tag +
+    var photo = '<span class="member-photo" data-id="' + esc(sid || '') + '" data-name="' + esc(m.name || m.email) + '">' + esc(BOLD.photo.initials(m.name || m.email)) + '</span>';
+    return '<li><div class="pp-person-row">' + photo + '<div>' + name + (m.pronouns ? ' <span class="acct-handle">' + esc(m.pronouns) + '</span>' : '') + ' ' + tag +
       (meta ? '<span class="proj-meta">' + meta + '</span>' : '') +
       (m.interests ? '<span class="proj-meta">' + esc(m.interests) + '</span>' : '') +
-      (l ? '<span class="proj-meta">' + l + '</span>' : '') + '</div></li>';
+      (l ? '<span class="proj-meta">' + l + '</span>' : '') + '</div></div></li>';
   }
 
   function render(){
     if (!members) return;
+    if (photoObserver) photoObserver.disconnect();
     var q = search.value.trim().toLowerCase();
     var shown = members.filter(function(m){
       return !q || [m.name, m.institution, m.interests, m.basedIn, m.role, BoldJoin.categoryLabel(BoldJoin.groupOf(m))].join(' ').toLowerCase().indexOf(q) !== -1;
@@ -52,6 +61,10 @@
       var label = r === 'PI' ? 'PIs' : r === 'Staff' || r === 'Other' || r === 'Alumni' ? r : r + 's';
       return '<div class="proj-group"><h3>' + esc(label) + '<span class="proj-count">' + group.length + '</span></h3><ul class="proj-list">' + group.map(personHtml).join('') + '</ul></div>';
     }).join('');
+    Array.prototype.forEach.call(root.querySelectorAll('.member-photo[data-id]'), function(node){
+      if (photoObserver) photoObserver.observe(node);
+      else BOLD.photo.mount(node, node.dataset.id, node.dataset.name);
+    });
   }
 
   search.addEventListener('input', render);
