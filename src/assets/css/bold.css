@@ -326,7 +326,7 @@ body:has(#viewAsBar){padding-bottom:72px;}
 .shell-main{position:relative;}
 /* In the masthead, beside the search (#pageAccess in masthead.njk); its panels open under it. */
 .page-access{position:relative; z-index:1100; font-family:var(--sans); font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px;}
-.ac-panel{position:absolute; top:100%; right:0; z-index:1; margin-top:8px; width:min(560px, calc(100vw - 32px)); background:var(--surface); border:1px solid var(--line); padding:14px 16px; display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--ink); box-shadow:0 8px 24px rgba(26,43,74,.10); text-align:left;}
+.ac-panel{position:absolute; top:100%; right:0; z-index:1; margin-top:8px; width:min(560px, calc(100vw - 32px)); background:var(--wash); border:1px solid var(--line); padding:14px 16px; display:flex; flex-direction:column; gap:10px; font-size:13px; color:var(--ink); box-shadow:0 8px 24px rgba(26,43,74,.10); text-align:left;}
 .ac-title{font-family:var(--serif); font-size:18px; font-weight:600;}
 .ac-ladder{display:flex; flex-direction:column; gap:2px;}
 .ac-row{display:grid; grid-template-columns:118px repeat(6, 1fr); align-items:center;}
@@ -354,7 +354,7 @@ body:has(#viewAsBar){padding-bottom:72px;}
 .br-chip.is-on, .br-chip.is-on:hover{background:var(--ink); border-color:var(--ink); color:var(--surface);}
 .br-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; max-height:50vh; overflow:auto;}
 .br-item{width:100%; text-align:left; font:inherit; color:var(--ink); background:none; border:1px solid transparent; border-radius:var(--radius); padding:6px 8px; cursor:pointer; display:flex; flex-direction:column; gap:1px;}
-.br-item:hover{background:var(--wash);}
+.br-item:hover{background:var(--surface);}
 .br-item.is-on{border-color:var(--ink);}
 .br-by{font-size:12px; color:var(--muted);}
 .ac-viewas{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding-top:10px; border-top:1px solid var(--line);}
