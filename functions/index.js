@@ -2607,6 +2607,9 @@ exports.getAllProjects = onCall(
     wsSnap.docs.forEach(function(d){ if ((d.data().members || []).indexOf(email) >= 0) mine[d.id] = true; });
     const shown = full ? groups : projectTitlesOnly(groups, mine);
     const items = shown.ongoing.concat(shown.submission, shown.completed, shown.planned);
+    // The ones the caller joined (its workspace's members), for Projects' Yours filter; `v` 2 marks a list that has them.
+    items.forEach(function(i){ if (mine[i.pid]) i.joined = true; });
+    shown.v = 2;
     const links = await slackLinksFor(Array.from(new Set(items.map(function(i){ return i.slackChannel; }).filter(Boolean))));
     items.forEach(function(i){ if (links[i.slackChannel]) i.slackUrl = links[i.slackChannel]; });
     return shown;

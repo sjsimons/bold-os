@@ -180,11 +180,11 @@
   var current = null;                                  // the last list from the function
   var filters = { q: '', author: '', keyword: '' };
   var autoTab = false;                                 // arrived with a filter: open a tab that has matches
-  var wantMine = false, myKey = '';                    // #mine: the author filter set to you, once known; kept as #mine
+  var myKey = '';                                      // the signed-in email: the author filter's Yours ('mine')
 
-  // Older cached lists have no `authors`, or no `submission` group; refetch those.
+  // Older cached lists have no `authors`, no `submission` group or no `joined` (`v` 2); refetch those.
   function hasAuthors(d){
-    return Array.isArray(d.submission) && ['ongoing', 'submission', 'completed', 'planned'].every(function(g){
+    return d.v >= 2 && Array.isArray(d.submission) && ['ongoing', 'submission', 'completed', 'planned'].every(function(g){
       // …and lists from before projects spanned venues (no `pid`): refetch those too.
       return (d[g] || []).every(function(p){ return (p.titleOnly || Array.isArray(p.authors)) && p.pid; });
     });
@@ -202,7 +202,8 @@
 
   function matches(p){
     if (filters.keyword && (p.keywords || []).indexOf(filters.keyword) === -1) return false;
-    if (filters.author && !people(p).some(function(o){ return o.key === filters.author; })) return false;
+    if (filters.author === 'mine') { if (!p.joined && !people(p).some(function(o){ return o.key === myKey; })) return false; }
+    else if (filters.author && !people(p).some(function(o){ return o.key === filters.author; })) return false;
     if (filters.q) {
       var hay = [p.title, p.abstract, (p.keywords || []).join(' '), p.slackChannel, p.owner, p.boardLabel,
         people(p).map(function(o){ return o.name; }).join(' ')].join(' ').toLowerCase();
@@ -229,11 +230,11 @@
       var add = function(v, label){ var o = document.createElement('option'); o.value = v; o.textContent = label; sel.appendChild(o); };
       add('', all);
       // A filter that arrived by link stays selectable even if no project has it any more.
-      if (value && !opts.some(function(o){ return o[0] === value; })) add(value, value);
+      if (value && value !== 'mine' && !opts.some(function(o){ return o[0] === value; })) add(value, value);
       opts.forEach(function(o){ add(o[0], o[1]); });
       sel.value = value;
     };
-    fill(el('projAuthor'), 'All authors', authorKeys.map(function(k){ return [k, authors[k]]; }), filters.author);
+    fill(el('projAuthor'), 'All authors', [['mine', 'Yours (an author, or joined)']].concat(authorKeys.map(function(k){ return [k, authors[k]]; })), filters.author);
     fill(el('projKeyword'), 'All keywords', keywordNames.map(function(k){ return [k, k + ' (' + keywords[k] + ')']; }), filters.keyword);
   }
 
@@ -242,7 +243,7 @@
     var tab = tabs.filter(function(t){ return t.classList.contains('active'); })[0];
     var parts = [];
     if (tab && tab.getAttribute('data-tab') !== 'ongoing') parts.push(tab.getAttribute('data-tab'));
-    ['q', 'author', 'keyword'].forEach(function(k){ if (filters[k]) parts.push(k === 'author' && filters.author === myKey ? 'mine' : k + '=' + encodeURIComponent(filters[k])); });
+    ['q', 'author', 'keyword'].forEach(function(k){ if (filters[k]) parts.push(k === 'author' && filters.author === 'mine' ? 'mine' : k + '=' + encodeURIComponent(filters[k])); });
     try { history.replaceState(null, '', location.pathname + location.search + (parts.length ? '#' + parts.join('&') : '')); } catch (e){}
   }
 
@@ -347,23 +348,23 @@
   });
 
   // #planned opens that tab; #keyword=rl, #author=<email>, #q=text (joined with &) set the filters;
-  // #mine (the masthead's Yours) sets the author filter to whoever is signed in.
+  // #mine (the masthead's Yours) sets the author filter to Yours: the projects you're an author
+  // on, registered, or joined (`joined`, from getAllProjects).
   try {
     (location.hash || '').slice(1).split('&').forEach(function(tok){
       var kv = tok.split('=');
-      if (tok === 'mine') { wantMine = autoTab = true; return; }
+      if (tok === 'mine') { filters.author = 'mine'; return; }
       if (kv.length === 1 && tabs.some(function(t){ return t.getAttribute('data-tab') === tok; })) return setTab(tok);
       if (kv[0] === 'q' || kv[0] === 'author' || kv[0] === 'keyword') filters[kv[0]] = decodeURIComponent(kv.slice(1).join('='));
     });
     el('projSearch').value = filters.q;
-    autoTab = autoTab || filtering();
+    autoTab = filtering();
   } catch (e){}
 
   function renderPage(user){
     if (!user) { cacheClear(); return; }
     if (!user.email) return;
     myKey = String(user.email).toLowerCase();
-    if (wantMine) { wantMine = false; filters.author = myKey; syncHash(); }
     loadCached('getAllProjects', user.email, renderProjects, function(){
       el('projMsg').textContent = 'Could not load projects.';
     }, hasAuthors);
@@ -377,6 +378,7 @@
   try {
     var hint = BOLD.authHint();
     if (hint && hint.e) {
+      myKey = hint.e.toLowerCase();
       var hit = cacheGet('getAllProjects:' + hint.e.toLowerCase());
       if (hit) renderProjects(hit.d);
     }
