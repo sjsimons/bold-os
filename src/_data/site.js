@@ -32,11 +32,11 @@ export default {
     // lower of the two; areaWhat list: its View or Edit, as Edit alone sees the titles, and
     // joins); Internal review has its own area.
     { label: 'Research', href: 'projects.html', area: 'projects', areaWhat: 'list', links: [
-      { label: 'Projects', href: 'projects.html', area: 'projects' },
-      { label: 'Internal review', href: 'audit-board.html', area: 'ml-cycle' },
       // To come: `soon: true` shows the name with a Soon tag, not a link (no page yet).
       { label: 'Problems bank', soon: true },
       { label: 'Benchmarks', soon: true },
+      { label: 'Projects', href: 'projects.html', area: 'projects' },
+      { label: 'Internal review', href: 'audit-board.html', area: 'ml-cycle' },
     ] },
     { label: 'Calendar', href: 'calendar.html', links: [], separatorAfter: true, area: 'calendar' },
     { label: 'People', href: 'people.html', area: 'people', links: [
