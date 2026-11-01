@@ -18,7 +18,7 @@
   var NAME = /^[a-z][a-z0-9_]{2,40}$/;
   var ref = !isNew && NAME.test(name) ? db.collection('agentTools').doc(name) : null;
   var x = null, loaded = false, proposals = [], me = null, fullWrite = false, form = null, editingQ = null, shown = {}, busy = {}, notice = '';
-  var BACK = '<a class="back-link" href="tools.html">&larr; All tools</a>';
+  var BACK = '<a class="back-link" href="tools.html">&larr; All agent tools</a>';
   var FIELDS = { title: 'Title', description: 'Description', acting: 'Acts', input: 'Inputs', code: 'Code' };
   var CONTENT = ['title', 'description', 'acting', 'input', 'code'];
   var historyWrap = document.getElementById('toolHistoryWrap'), histPanel = null;
@@ -164,15 +164,15 @@
     if (!loaded) return;
     if (historyWrap) drawHistory();
     if (isNew) {
-      document.title = 'New tool | BOLD Lab';
-      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Tool</span></div><h1>Propose a new tool</h1>' +
+      document.title = 'New agent tool | BOLD Lab';
+      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent tool</span></div><h1>Propose a new agent tool</h1>' +
         '<p class="hero-note">A new ability for every agent. Another PI or admin accepts it; Claude reviews it meanwhile.</p></div><main>' + formHtml() + '</main>';
       bind();
       return;
     }
     if (!x && !proposals.length) {
-      document.title = 'Tool not found | BOLD Lab';
-      body.innerHTML = '<div class="hero">' + BACK + '<h1>Tool not found</h1><p class="hero-note">It may have been removed.</p></div>';
+      document.title = 'Agent tool not found | BOLD Lab';
+      body.innerHTML = '<div class="hero">' + BACK + '<h1>Agent tool not found</h1><p class="hero-note">It may have been removed.</p></div>';
       return;
     }
     var shown_ = x ? content(x) : content((proposals.filter(function(q){ return q.kind === 'new'; })[0] || {}).after);
@@ -180,7 +180,7 @@
     var bq = x && branchQ();
     if (bq && bq.kind === 'tool') shown_ = content(Object.assign({}, x, bq.after));
     document.title = (shown_.title || name) + ' | BOLD Lab';
-    var head = '<div class="hero">' + BACK + '<div><span class="eyebrow">Tool' + (x ? '' : ' · proposed') + '</span></div><h1>' + esc(shown_.title || name) + '</h1>' +
+    var head = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent tool' + (x ? '' : ' · proposed') + '</span></div><h1>' + esc(shown_.title || name) + '</h1>' +
       '<p class="skill-name"><code>' + esc(name) + '</code> · ' + (shown_.acting ? 'acts' : 'reads') + '</p>';
     if (form) { body.innerHTML = head + '</div><main>' + formHtml() + '</main>'; bind(); return; }
     body.innerHTML = head + '<p class="hero-note">' + esc(shown_.description || '') + '</p>' +

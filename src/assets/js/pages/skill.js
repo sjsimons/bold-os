@@ -31,7 +31,7 @@
   var x = null, loaded = false, editing = isNew || location.hash === '#edit', fullWrite = false, me = null, open = 'SKILL.md';
   // Open proposed changes; the one being edited (yours), if any; whose changes are shown; a notice.
   var proposals = [], editingQ = null, shownQ = {}, notice = '', busyQ = {};
-  var BACK = '<a class="back-link" href="skills.html">&larr; All skills</a>';
+  var BACK = '<a class="back-link" href="skills.html">&larr; All agent skills</a>';
   var CONTENT = ['title', 'description', 'body', 'files'];
   var historyWrap = document.getElementById('skillHistoryWrap'), histPanel = null;
 
@@ -330,16 +330,16 @@
     if (!loaded) return;
     if (historyWrap) drawHistory();
     if (isNew) {
-      document.title = 'New skill | BOLD Lab';
-      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Skill</span></div><h1>New skill</h1>' +
+      document.title = 'New agent skill | BOLD Lab';
+      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent skill</span></div><h1>New agent skill</h1>' +
         (fullWrite ? '' : '<p class="hero-note">' + S.NOT_PI + '.</p>') + '</div>' + (fullWrite ? '<main>' + formHtml() + '</main>' : '');
       if (fullWrite) bindForm();
       return;
     }
     var newQ = proposals.filter(function(q){ return q.kind === 'new'; })[0];
     if (!x && !newQ) {
-      document.title = 'Skill not found | BOLD Lab';
-      body.innerHTML = '<div class="hero">' + BACK + '<h1>Skill not found</h1><p class="hero-note">It may have been deleted.</p></div>';
+      document.title = 'Agent skill not found | BOLD Lab';
+      body.innerHTML = '<div class="hero">' + BACK + '<h1>Agent skill not found</h1><p class="hero-note">It may have been deleted.</p></div>';
       return;
     }
     if (!x) {
@@ -354,7 +354,7 @@
       return;
     }
     document.title = (x.title || x.name) + ' | BOLD Lab';
-    var head = '<div class="hero">' + BACK + '<div><span class="eyebrow">Skill</span></div><h1>' + esc(x.title || x.name) + '</h1>' +
+    var head = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent skill</span></div><h1>' + esc(x.title || x.name) + '</h1>' +
       '<p class="skill-name"><code>' + esc(x.name) + '</code></p>';
     if (editing) {
       body.innerHTML = head + '</div><main>' + formHtml() + '</main>';
@@ -364,7 +364,7 @@
     // On a branch that changes it: shown as proposed, with no controls but the way back.
     var bq = branchQ(), qsHtml = proposalsHtml();   // measured against the skill as it is
     withShown(function(){
-      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Skill</span></div><h1>' + esc(x.title || x.name) + '</h1>' +
+      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent skill</span></div><h1>' + esc(x.title || x.name) + '</h1>' +
         '<p class="skill-name"><code>' + esc(x.name) + '</code></p><p class="hero-note">' + esc(x.description || '') + '</p>' +
         (bq ? '<p class="sk-branch">Shown as proposed by ' + esc((bq.by && bq.by.name) || 'someone') + (bq.note ? ': “' + esc(bq.note) + '”' : '') + '. <button type="button" class="btn-text sk-branch-back">Back to the skill now</button></p>' : controls()) + '</div>' +
         '<main>' + qsHtml + installHtml() + filesHtml() + '</main>';

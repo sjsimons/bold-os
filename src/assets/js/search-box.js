@@ -9,7 +9,7 @@ window.BoldSearch = (function(){
   var SCOPES = [
     { key: 'boldiquette', label: 'BOLDiquette', pages: /^boldiquette\.html$/ },
     { key: 'guides', label: 'How to', pages: /^guides?\.html$/ },
-    { key: 'skills', label: 'Skills', pages: /^skills?\.html$/ },
+    { key: 'skills', label: 'Agent skills', pages: /^skills?\.html$/ },
     { key: 'events', label: 'Events', pages: /^(events?|session|talk|calendar|event-.*)\.html$/ },
     { key: 'projects', label: 'Projects', pages: /^(projects?|project-meetings|projects-register)\.html$/ },
     { key: 'people', label: 'People', pages: /^(people|join-requests)\.html$/ },

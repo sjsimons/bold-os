@@ -32,7 +32,7 @@ window.BoldConnections = (function(){
   var JOINING_FIRST = ['asked', 'signed-up', 'invited', 'contact', 'approved', 'supervises'];
   // Things: their shape and what they're called.
   var THINGS = { project: ['square', 'Projects and papers'], event: ['diamond', 'Events'], session: ['diamond', 'Events'], talk: ['diamond', 'Events'],
-    guide: ['page', 'Guides and the BOLDiquette'], handbook: ['page', 'Guides and the BOLDiquette'], skill: ['triangle', 'Skills'] };
+    guide: ['page', 'Guides and the BOLDiquette'], handbook: ['page', 'Guides and the BOLDiquette'], skill: ['triangle', 'Agent skills'] };
   // Lineage: who brought someone in, the first of these that's known.
   var LINEAGE = [['invited', 'invited'], ['contact', 'via contact'], ['supervises', 'via supervisor'], ['approved', 'approved']];
 
