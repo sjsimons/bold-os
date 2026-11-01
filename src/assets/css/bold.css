@@ -296,7 +296,7 @@ footer{
    styled as the search's own list (.ms-menu, .ms-row). */
 .mast-menu-wrap{position:relative;}
 /* The masthead above the page while one of its menus or panels is open. */
-.masthead:has(.mast-menu:not([hidden])), .masthead:has(.ac-panel){z-index:1200;}
+.masthead:has(.mast-menu:not([hidden])), .masthead:has(.ms-menu:not([hidden])), .masthead:has(.ac-panel){z-index:1200;}
 .mast-menu-btn{display:block; border:0; background:none; padding:0; border-radius:50%; cursor:pointer;}
 .mast-menu-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .mast-avatar{display:grid; place-items:center; width:32px; height:32px; border-radius:50%; object-fit:cover; box-sizing:border-box; border:1px solid var(--line);}
