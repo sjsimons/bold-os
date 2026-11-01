@@ -33,7 +33,7 @@ section.block:first-of-type{margin-top:28px;}
 .photo-controls button:disabled{opacity:.5;cursor:not-allowed;}
 @media (max-width:600px){.photo-controls{margin-left:0;}}
 .pp-person-row{display:flex;align-items:flex-start;gap:12px;}
-.pp-person-row .member-photo{margin-top:3px;}
+.pp-person-row .member-photo{width:68px;height:68px;margin-top:3px;font-size:19px;}
 .facts{margin:0;}
 .fact{display:flex; gap:24px; padding:3px 0; border-bottom:1px solid rgba(26,43,74,0.08);}
 .fact dt{flex:0 0 150px; font-family:var(--sans); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); padding-top:5px;}
