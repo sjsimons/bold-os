@@ -60,7 +60,7 @@
     var runway = [
       Object.assign({ key: 'register', label: 'Register', short: 'Register',
         summary: 'Register paper — abstract, outline, compute estimate',
-        description: 'Abstract, paper outline and a compute estimate on the Internal Review Board. No full text yet.' }, wk(8)),
+        description: 'Abstract, paper outline and a compute estimate on Internal Review. No full text yet.' }, wk(8)),
       Object.assign({ key: 'pitch', label: 'Pitch Day', short: 'Pitch Day',
         summary: 'Pitch Day — present the paper to the group',
         description: 'Every paper is pitched to the group.' },
@@ -200,7 +200,7 @@
     var stamp = icsDateStamp(new Date());
     var lines = [
       'BEGIN:VCALENDAR', 'VERSION:2.0',
-      'PRODID:-//BOLD Lab//Internal Review Board//EN',
+      'PRODID:-//BOLD Lab//Internal Review//EN',
       'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
       'X-WR-CALNAME:' + icsEscape(v.label + ' \u2014 internal deadlines')
     ];

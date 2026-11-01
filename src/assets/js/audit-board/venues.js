@@ -12,7 +12,7 @@
       return;
     }
     if (state.authResolved && !state.currentUser){
-      els.venuesRegion.innerHTML = '<p class="board-empty"><button class="inline-link" type="button" id="signInInline">Sign in</button> with Slack to view the Internal Review Board.</p>';
+      els.venuesRegion.innerHTML = '<p class="board-empty"><button class="inline-link" type="button" id="signInInline">Sign in</button> with Slack to view Internal Review.</p>';
       var siInline = document.getElementById('signInInline');
       if (siInline) siInline.addEventListener('click', triggerSlackSignIn);
       return;

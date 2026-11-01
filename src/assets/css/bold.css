@@ -151,6 +151,8 @@ footer{
   text-decoration:none; padding:4px 0; white-space:nowrap;
 }
 .nav-link:hover{color:var(--accent);}
+/* A page the viewer can't view (bold.js sidebarAccess): .nav-link's display beats [hidden]. */
+#sidebar .nav-link[hidden]{display:none;}
 .nav-link.active{color:var(--accent); font-weight:600;}
 /* Sub-links collapse to nothing by default (padding included, so a group's
    gap to the next doesn't depend on how many hidden links it has) and expand on hover/focus

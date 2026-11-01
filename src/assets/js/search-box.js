@@ -13,7 +13,7 @@ window.BoldSearch = (function(){
     { key: 'events', label: 'Events', pages: /^(events?|session|talk|calendar|event-.*)\.html$/ },
     { key: 'projects', label: 'Projects', pages: /^(projects?|project-meetings|projects-register)\.html$/ },
     { key: 'people', label: 'People', pages: /^(people|join-requests)\.html$/ },
-    { key: 'board', label: 'Review board', pages: /^(audit-board|how-to-submit-a-paper)\.html$/ },
+    { key: 'board', label: 'Internal Review', pages: /^(audit-board|how-to-submit-a-paper)\.html$/ },
     { key: 'comments', label: 'Comments', pages: /^comments\.html$/ },
   ];
   function scope(key){ return SCOPES.filter(function(s){ return s.key === key; })[0] || null; }

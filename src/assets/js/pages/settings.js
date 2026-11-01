@@ -107,7 +107,7 @@
   // order; one in no group shows under Other.
   var GROUPS = [
     ['Projects and boards', ['project-announce', 'card-added', 'card-comments', 'card-done', 'supervision-requests']],
-    ['Internal Review Board', ['irb-board', 'irb-reviews-out', 'irb-author-cap', 'venue-proposed', 'venue-calls']],
+    ['Internal Review', ['irb-board', 'irb-reviews-out', 'irb-author-cap', 'venue-proposed', 'venue-calls']],
     ['Proposed changes and comments', ['proposals', 'proposal-decided', 'proposal-reviewer', 'guide-comments', 'tags']],
     ['Requests', ['join-requests', 'inviter-confirm', 'group-requests', 'invite-link-reminder', 'agent-requests']],
     ['Service desk', ['letters', 'introductions']],
@@ -140,7 +140,7 @@
         // Other: whatever isn't in a group yet (a new feature: add it to GROUPS).
         var mine = g[0] === 'Other' ? keys.filter(function(k){ return !GROUPS.some(function(x){ return x[1].indexOf(k) >= 0; }); })
           : g[1].filter(function(k){ return known[k]; });
-        // A label that starts with its group's name ("Internal Review Board: …") is shown without it.
+        // A label that starts with its group's name ("Internal Review: …") is shown without it.
         return mine.length ? '<h3 class="jr-feature-group">' + esc(g[0]) + '</h3>' + mine.map(function(k){ return featureHtml(k, g[0]); }).join('') : '';
       }).join('') : '<p class="proj-meta">None yet: a feature appears here once it’s deployed.</p>') +
       '</fieldset>' + (pilotError ? '<p class="ev-error">' + esc(pilotError) + '</p>' : '') +

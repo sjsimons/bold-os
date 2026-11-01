@@ -1137,11 +1137,11 @@ const PILOTS = {
 // tellPerson, tellPeople. Replies to someone's own click in Slack (a slash command's
 // answer) have no key: they always go.
 const LIVE_FEATURES = {
-  'venue-proposed': 'A venue proposed for the Internal Review Board (to PIs and admins)',
+  'venue-proposed': 'A venue proposed for Internal Review (to PIs and admins)',
   'venue-calls': 'New calls for papers (to PIs and admins)',
-  'irb-board': 'Internal Review Board: papers, reviewers and reviews',
-  'irb-author-cap': 'Internal Review Board: authors on too many papers',
-  'irb-reviews-out': 'Internal Review Board: reviews out',
+  'irb-board': 'Internal Review: papers, reviewers and reviews',
+  'irb-author-cap': 'Internal Review: authors on too many papers',
+  'irb-reviews-out': 'Internal Review: reviews out',
   'proposals': 'Proposed changes (to PIs and admins)',
   'proposal-decided': 'Proposed changes accepted or declined',
   'proposal-reviewer': 'The reviewer’s concerns about a proposed change (to PIs and admins)',
@@ -1164,7 +1164,8 @@ let pilotsListed = null;
 function listPilots(){
   if (!pilotsListed) pilotsListed = db.collection('settings').doc('pilot').get().then((s) => {
     const d = s.data() || {}, known = d.known || {}, live = d.live || {}, all = Object.assign({}, LIVE_FEATURES, PILOTS);
-    const missing = Object.keys(all).filter((k) => !known[k]), wasLive = Object.keys(LIVE_FEATURES).filter((k) => !(k in live));
+    // Missing, or named differently now (a renamed page): the label is the code's.
+    const missing = Object.keys(all).filter((k) => known[k] !== all[k]), wasLive = Object.keys(LIVE_FEATURES).filter((k) => !(k in live));
     if (missing.length || wasLive.length) return s.ref.set(Object.assign({ known: Object.fromEntries(missing.map((k) => [k, all[k]])) },
       wasLive.length ? { live: Object.fromEntries(wasLive.map((k) => [k, true])) } : {}), { merge: true });
   }).catch((err) => { pilotsListed = null; logger.warn('Listing the pilots failed', { error: String(err && err.message || err) }); });
