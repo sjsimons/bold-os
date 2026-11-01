@@ -346,7 +346,7 @@
       // Proposed, not yet accepted: its proposal is the page.
       var p = newQ.after || {};
       document.title = (p.title || name) + ' | BOLD Lab';
-      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Skill · proposed</span></div><h1>' + esc(p.title || name) + '</h1>' +
+      body.innerHTML = '<div class="hero">' + BACK + '<div><span class="eyebrow">Agent skill · proposed</span></div><h1>' + esc(p.title || name) + '</h1>' +
         '<p class="skill-name"><code>' + esc(name) + '</code></p><p class="hero-note">' + esc(p.description || '') + '</p></div>' +
         '<main>' + proposalsHtml() + '</main>';
       var pq = body.querySelector('.sk-proposals');
