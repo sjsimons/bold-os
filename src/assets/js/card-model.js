@@ -87,39 +87,19 @@
     return out;
   }
 
-  // The abstract textarea + Preview — shared by the Submit-the-abstract
-  // form and the inline abstract editor on the card details (same editor
-  // in both places, 2026-09-18+32, per Eduardo).
+  // The abstract textarea, a Markdown field of its own kind (md-field.js: Write or
+  // Preview with its LaTeX, images), and its counter: shared by the Submit-the-abstract
+  // form and the inline abstract editor on the card details.
   function abstractTextFieldHtml(text, disabledAttr){
     var len = (text || '').length;
-    return '<div class="field"><label for="stageAbstractText">Abstract</label><textarea id="stageAbstractText" class="no-tags md-img" maxlength="' + ABSTRACT_MAX_CHARS + '"' + (disabledAttr || '') + ' placeholder="Paste the abstract text. LaTeX is fine, typed as plain text: $inline formula$ or $$block formula$$.">' + BOLD.escapeHtml(text || '') + '</textarea>' +
+    return '<div class="field"><label for="stageAbstractText">Abstract</label><textarea id="stageAbstractText" class="no-tags md-field" data-md="abstract" data-preview-class="abstract-render mdf-pre" maxlength="' + ABSTRACT_MAX_CHARS + '"' + (disabledAttr || '') + ' placeholder="Paste the abstract text. LaTeX is fine, typed as plain text: $inline formula$ or $$block formula$$.">' + BOLD.escapeHtml(text || '') + '</textarea>' +
       '<div class="abstract-counter' + (len > ABSTRACT_MAX_CHARS ? ' over' : '') + '" id="stageAbstractCounter">' + abstractCounterText(len) + '</div>' +
-      '<button class="btn-text" type="button" id="stageAbstractPreviewBtn" style="margin-top:6px;">Preview</button>' +
-      '<div class="abstract-render abstract-preview" id="stageAbstractPreview" hidden></div>' +
     '</div>';
   }
 
-  // Abstract preview (2026-09-18+30, per Eduardo): renders the textarea's
-  // LaTeX ($inline$ / $$block$$) with the same renderAbstractHtml the
-  // details use; stays live while open.
+  // The abstract's counter, live (its preview is the Markdown field's).
   function wireAbstractPreview(){
-    var previewBtn = document.getElementById('stageAbstractPreviewBtn');
-    var previewBox = document.getElementById('stageAbstractPreview');
     var previewText = document.getElementById('stageAbstractText');
-    if (previewBtn && previewBox && previewText){
-      var refreshPreview = function(){
-        previewBox.innerHTML = previewText.value.trim()
-          ? renderAbstractHtml(previewText.value)
-          : '<span style="color:var(--muted);">Nothing to preview yet.</span>';
-      };
-      previewBtn.addEventListener('click', function(){
-        var opening = previewBox.hidden;
-        previewBox.hidden = !opening;
-        previewBtn.textContent = opening ? 'Hide preview' : 'Preview';
-        if (opening) refreshPreview();
-      });
-      previewText.addEventListener('input', function(){ if (!previewBox.hidden) refreshPreview(); });
-    }
     // "Characters remaining" under the textarea, live.
     var counter = document.getElementById('stageAbstractCounter');
     if (counter && previewText){

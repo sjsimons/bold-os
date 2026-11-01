@@ -604,8 +604,19 @@ body:has(#viewAsBar){padding-bottom:72px;}
 /* Tagged people (bold.js, markdown.js) and the list for tagging them (mentions.js). */
 .md-img-link{display:inline-block; max-width:100%;}
 .md-img{max-width:100%; height:auto; display:block; margin:6px 0; border-radius:var(--radius); background:#fff;}
-.mi-line{display:block; font-family:var(--sans); font-size:12px; font-weight:400; color:var(--muted); margin-top:4px;}
-.mi-line .btn-text{font-size:12px;}
+/* The Markdown field (md-field.js): Write | Preview above the box, what it takes and images under it. */
+.mdf-tabs{display:flex; gap:18px; margin:4px 0 6px;}
+.mdf-tab{font-family:var(--sans); font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); background:none; border:none; border-bottom:2px solid transparent; padding:4px 0; cursor:pointer;}
+.mdf-tab:hover{color:var(--accent);}
+.mdf-tab.is-current{color:var(--ink); border-bottom-color:var(--accent);}
+textarea.md-field[hidden], .mdf-preview[hidden]{display:none;}
+.mdf-preview{display:block; box-sizing:border-box; width:100%; margin:0; padding:8px 14px; overflow:auto; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); font-family:var(--serif); font-size:16px; line-height:1.55; color:var(--ink-soft); text-transform:none; letter-spacing:normal; font-weight:400;}
+.mdf-preview.mdf-pre{white-space:pre-wrap;}
+.mdf-preview .katex-display{margin:0.5em 0; overflow-x:auto; overflow-y:hidden;}
+.mdf-empty{color:var(--muted);}
+.mdf-line{display:block; font-family:var(--sans); font-size:12px; font-weight:400; letter-spacing:normal; text-transform:none; color:var(--muted); margin-top:4px;}
+.mdf-line .btn-text{font-size:12px;}
+.mdf-line .mdf-file{display:none !important;}
 .md-mention{text-decoration:none; color:var(--accent); background:var(--wash); border-radius:var(--radius); padding:0 3px; font-weight:600;}
 .md-mention:hover{text-decoration:underline;}
 .mention-list{position:absolute; z-index:300; margin:0; padding:4px 0; list-style:none; min-width:200px; max-width:320px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 10px 30px rgba(26,43,74,.16); font-family:var(--sans); font-size:14px; color:var(--ink);}

@@ -152,12 +152,6 @@
 .field-error[hidden]{display:none;}
 .abstract-counter{font-family:var(--sans); font-size:12.5px; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums;}
 .abstract-counter.over{color:var(--danger-text); font-weight:600;}
-.abstract-preview{
-  margin-top:8px; padding:12px 14px; overflow-x:auto;
-  white-space:pre-wrap; line-height:1.55; font-size:16px; color:var(--ink-soft);
-  background:var(--surface); border:1px solid var(--line);
-}
-.abstract-preview[hidden]{display:none;}
 .stage-fields-actions{display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap;}
 .detail .btn{
   font-family:var(--sans); font-weight:600; font-size:14px; color:var(--ink);

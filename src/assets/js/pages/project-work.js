@@ -289,7 +289,7 @@ var ProjectWork = (function(){
     var options = remote.items.filter(function(x){ return x.column !== 'done' || x.kind === 'pr'; });
     return '<form class="wk-editor" novalidate>' +
       '<label>Title<input type="text" class="wk-f-title" maxlength="200" value="' + esc(c ? c.title : '') + '" required></label>' +
-      '<label>Description<textarea class="wk-f-notes md-img" maxlength="' + MAX_NOTES + '" rows="3">' + esc(c ? c.notes || '' : '') + '</textarea></label>' +
+      '<label>Description<textarea class="wk-f-notes md-field" maxlength="' + MAX_NOTES + '" rows="3">' + esc(c ? c.notes || '' : '') + '</textarea></label>' +
       (c ? '<label>Column<select class="wk-f-col">' + COLUMNS.map(function(k){
         return '<option value="' + k[0] + '"' + (k[0] === c.column ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></label>' : '') +
       '<label>Type<select class="wk-f-kind"><option value="">From its links</option>' + TYPES.map(function(y){
@@ -844,8 +844,8 @@ var ProjectWork = (function(){
       var f = keepDesc;
       if (!f) {
         var tmp = document.createElement('div');
-        tmp.innerHTML = '<form class="wk-editor wk-desc-form" novalidate><label>Description <span class="detail-muted">Markdown: **bold**, lists, [links](https://…)</span>' +
-          '<textarea class="wk-d-text md-img" maxlength="' + MAX_NOTES + '" rows="12">' + esc(c.notes || '') + '</textarea></label>' +
+        tmp.innerHTML = '<form class="wk-editor wk-desc-form" novalidate><label>Description' +
+          '<textarea class="wk-d-text md-field" maxlength="' + MAX_NOTES + '" rows="12">' + esc(c.notes || '') + '</textarea></label>' +
           '<div class="field-error wk-d-error" hidden></div>' +
           '<div class="stage-fields-actions"><button class="btn" type="submit">Save</button><button class="btn" type="button" data-wk="dcancel">Cancel</button></div></form>';
         f = tmp.firstChild;

@@ -18,7 +18,7 @@ window.BoldCardTalk = (function(){
     el.className = 'detail-abstract wk-talk';
     el.innerHTML = '<div class="detail-abstract-label">Conversation</div><ul class="wk-talk-list"></ul>' +
       '<form class="wk-talk-form" novalidate>' +
-      '<textarea aria-label="Add a comment" class="wk-talk-text md-img" rows="3" maxlength="' + MAX + '" placeholder="Add a comment: Markdown, @ to tag someone"></textarea>' +
+      '<textarea aria-label="Add a comment" class="wk-talk-text md-field" rows="3" maxlength="' + MAX + '" placeholder="Add a comment: Markdown, @ to tag someone"></textarea>' +
       '<div class="field-error wk-talk-error" hidden></div>' +
       '<div class="stage-fields-actions"><button class="btn" type="submit">Comment</button></div></form>';
     var listEl = el.querySelector('.wk-talk-list'), form = el.querySelector('.wk-talk-form'), box = form.querySelector('textarea'), error = form.querySelector('.wk-talk-error');
@@ -52,7 +52,7 @@ window.BoldCardTalk = (function(){
           (mine && editing !== x.id ? ' <button class="btn-text wk-talk-act" type="button" data-act="edit">Edit</button>' : '') +
           (mine || o.fullWrite() ? ' <button class="btn-text wk-talk-act" type="button" data-act="delete">Delete</button>' : '') + '</div>';
         var body = editing === x.id
-          ? '<form class="wk-talk-edit" novalidate><textarea class="md-img" rows="3" maxlength="' + MAX + '">' + esc(kept !== null ? kept : x.text) + '</textarea>' +
+          ? '<form class="wk-talk-edit" novalidate><textarea class="md-field" rows="3" maxlength="' + MAX + '">' + esc(kept !== null ? kept : x.text) + '</textarea>' +
             '<div class="stage-fields-actions"><button class="btn" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button></div></form>'
           : '<div class="wk-desc">' + BoldMarkdown.render(x.text) + '</div>';
         return '<li class="wk-talk-item' + (x.id === marked ? ' is-marked' : '') + '" id="c-' + esc(x.id) + '" data-id="' + esc(x.id) + '">' + head + body + '</li>';

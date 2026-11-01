@@ -732,11 +732,6 @@ footer{max-width:var(--content-max); margin:0 0 0 var(--page-left); padding:32px
    Request changes) — greyed out, no underline, no pointer. */
 .btn-text:disabled{color:var(--muted); text-decoration:none; opacity:.6; cursor:default;}
 /* Live LaTeX preview under the abstract textarea. */
-.abstract-preview{
-  margin-top:8px; padding:12px 14px; max-width:640px; overflow-x:auto;
-  white-space:pre-wrap; line-height:1.55; font-size:16px; color:var(--ink-soft);
-  background:var(--surface); border:1px solid var(--line);
-}
 /* Abstract section at the end of the card details: label above, text below. */
 .detail-abstract{max-width:var(--article-max); margin:0 0 32px;}
 .detail-abstract-label{font-family:var(--sans); font-size:13px; color:var(--muted); margin-bottom:6px;}

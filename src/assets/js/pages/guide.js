@@ -249,14 +249,9 @@
       hasSections() ? '<label>Section<input type="text" class="gd-section" value="' + esc(p.section || (isAdd ? currentTab() : '') || '') + '" list="gdSections"></label>' +
         '<datalist id="gdSections">' + parts().map(function(q){ return q.section; }).filter(function(v, i, a){ return v && a.indexOf(v) === i; }).map(function(v){ return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>' : '') +
       '<label>Title<input type="text" class="gd-title" value="' + esc(p.title) + '" placeholder="e.g. Before the reviews come in"></label>' +
-      // Write or Preview, as GitHub's comments: how the text will look, in its place.
+      // The Markdown field (md-field.js): Write or Preview, images.
       '<div class="gd-text-label">Text</div>' +
-      '<div class="guide-tabs gd-modes" role="tablist">' +
-        '<button type="button" class="guide-tab gd-mode is-current" data-mode="write" role="tab" aria-selected="true">Write</button>' +
-        '<button type="button" class="guide-tab gd-mode" data-mode="preview" role="tab" aria-selected="false">Preview</button></div>' +
-      '<textarea class="gd-body md-img" rows="16" aria-label="Text">' + esc(p.body) + '</textarea>' +
-      '<div class="guide-text gd-preview-box" hidden></div>' +
-      '<p class="event-form-hint">Markdown: **bold**, *italic*, [a link](https://…), lines starting with - or 1. for lists, a blank line between paragraphs, @ to tag someone.</p>' +
+      '<textarea class="gd-body md-field" rows="16" aria-label="Text" data-preview-class="guide-text">' + esc(p.body) + '</textarea>' +
       noteHtml(isAdd ? 'e.g. Added a part on posters' : 'e.g. Clearer advice on ablations') +
       actionsHtml(isAdd ? '' : '<button type="button" class="btn-text danger gd-remove">' + 'Propose removing this part' + '</button>') +
       '</div>';
@@ -481,7 +476,7 @@
         'Between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; Main</code> and <code>=======</code> is main’s text, then yours, to <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>. Keep what should stay and remove those lines.</p>' +
       (v.titleWas ? '<p class="event-form-hint">Main’s title for it is now “' + esc(v.titleWas) + '”.</p>' : '') +
       '<label>Title<input type="text" class="gd-r-title" maxlength="200" value="' + esc(v.title) + '"></label>' +
-      '<label>Text<textarea class="gd-r-body md-img" rows="14" spellcheck="false">' + esc(v.text) + '</textarea></label>' +
+      '<label>Text<textarea class="gd-r-body md-field" rows="14" spellcheck="false" data-preview-class="guide-text">' + esc(v.text) + '</textarea></label>' +
       (v.error ? '<p class="ev-error">' + esc(v.error) + '</p>' : '') +
       '<div class="event-form-actions"><button type="button" class="ev-save gd-r-go">Continue</button><button type="button" class="ev-cancel gd-r-stop">Stop rebasing</button></div></div>';
   }
@@ -912,22 +907,6 @@
 
   function bindForm(el){
     el.querySelector('.ev-cancel').addEventListener('click', closeForm);
-    var previewBox = el.querySelector('.gd-preview-box'), text = el.querySelector('.gd-body');
-    Array.prototype.forEach.call(el.querySelectorAll('.gd-mode'), function(b){
-      b.addEventListener('click', function(){
-        var preview = b.getAttribute('data-mode') === 'preview';
-        Array.prototype.forEach.call(el.querySelectorAll('.gd-mode'), function(o){
-          o.classList.toggle('is-current', o === b); o.setAttribute('aria-selected', o === b ? 'true' : 'false');
-        });
-        // The preview as tall as the text box, so the form doesn't jump.
-        if (preview) {
-          previewBox.style.minHeight = text.offsetHeight + 'px';
-          previewBox.innerHTML = text.value.trim() ? md(text.value) : '<p class="gd-preview-empty">Nothing to preview.</p>';
-        }
-        text.hidden = preview; previewBox.hidden = !preview;
-        if (!preview) text.focus();
-      });
-    });
     // Each save button (Propose change, Add to draft) runs the form's save; staging says which.
     var buttons = el.querySelectorAll('.ev-save'), staging = false;
     var save = { addEventListener: function(type, fn){

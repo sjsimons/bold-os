@@ -109,14 +109,8 @@ section.block{max-width:var(--article-max); margin:48px 0 0;}
   .guide-part h2{font-size:22px;}
 }
 
-/* Write / Preview of a part's text in its form (pages/guide.js), as GitHub's comments. */
+/* A part's text in its form (pages/guide.js; the Markdown field, md-field.js). */
 .gd-text-label{color:var(--muted);}
-.gd-modes{margin:2px 0 12px;}
-.gd-mode{background:none; border:none; border-bottom:2px solid transparent; cursor:pointer;}
-.gd-preview-box{box-sizing:border-box; margin:0; padding:4px 16px; overflow:auto; background:var(--paper); border:1px solid var(--line); font-family:var(--serif); font-size:16px; line-height:1.55; color:var(--ink-soft);}
-.gd-preview-empty{color:var(--muted);}
-.event-form .gd-body{margin-top:0;}
-.event-form .gd-body[hidden], .gd-preview-box[hidden]{display:none;}
 /* "View as proposed" (pages/guide.js): a bar fixed at the bottom of the screen (clear of the
    page's top, where Who can see this page is), and the changed part marked. */
 .gd-viewing{position:fixed; left:200px; right:0; bottom:0; z-index:150; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px;
