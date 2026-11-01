@@ -5,6 +5,9 @@
 // are http(s), mailto, a page of this site or an #anchor. Tables: a | row, a
 // |---| row under it, then | rows. @[Name](SlackId), a tagged person (mentions.js),
 // shows as @Name, linking to their Slack profile.
+// Phases: a heading ending " · 8w", " · 10d" or " · after" (weeks or days before a deadline,
+// or after it) is a phase; with two or more, a timeline of them, each linking to its heading,
+// comes before the first (the BOLDiquette's ML Conference Cycle).
 // BoldMarkdown.render(text) → HTML; BoldMarkdown.plain(text) → plain text, escaped,
 // with its tags and web addresses as links (comments).
 window.BoldMarkdown = (function(){
@@ -107,9 +110,23 @@ window.BoldMarkdown = (function(){
     return html;
   }
 
+  var PHASE = /^(#{1,4})\s+(.*?)\s+·\s+(\d+[wd]|after)\s*$/;
+  function slug(t){ return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  function whenText(w){ return w === 'after' ? 'after the deadline' : parseInt(w, 10) + (/w$/.test(w) ? ' week' : ' day') + (parseInt(w, 10) === 1 ? '' : 's') + ' before'; }
+  function timeline(phases){
+    // The last phase before the deadline (the submission) stands out.
+    var pivot = -1; phases.forEach(function(p, i){ if (p.when !== 'after') pivot = i; });
+    return '<nav class="md-timeline" aria-label="Phases at a glance"><ol style="--n:' + phases.length + '">' + phases.map(function(p, i){
+      return '<li' + (p.when === 'after' ? ' class="is-after"' : i === pivot ? ' class="is-pivot"' : '') + '><a href="#' + p.id + '"><span class="tl-dot"></span><span class="tl-name">' + esc(p.name) + '</span>' +
+        '<span class="tl-wk">' + esc(p.when) + '</span></a></li>';
+    }).join('') + '</ol></nav>';
+  }
   function render(text){
     var lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
     var out = '', i = 0;
+    var phases = [];
+    lines.forEach(function(l){ var m = PHASE.exec(l); if (m) phases.push({ name: m[2], when: m[3], id: 'phase-' + slug(m[2]) }); });
+    var phaseAt = 0;
     while (i < lines.length) {
       var line = lines[i];
       if (!line.trim()) { i++; continue; }
@@ -128,6 +145,13 @@ window.BoldMarkdown = (function(){
         out += '<div class="md-table"><table><thead><tr>' + head.map(function(c){ return '<th>' + inline(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
           rows.map(function(row){ return '<tr>' + row.map(function(c){ return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
         continue;
+      }
+      var ph = phases.length > 1 && PHASE.exec(line);
+      if (ph) {
+        var pn = Math.min(ph[1].length + 2, 6), info = phases[phaseAt++];
+        if (phaseAt === 1) out += timeline(phases);
+        out += '<h' + pn + ' class="md-phase" id="' + info.id + '">' + inline(ph[2]) + ' <span class="md-when">' + esc(whenText(ph[3])) + '</span></h' + pn + '>';
+        i++; continue;
       }
       var h = /^(#{1,4})\s+(.*)$/.exec(line);
       if (h) { var n = Math.min(h[1].length + 2, 6); out += '<h' + n + '>' + inline(h[2]) + '</h' + n + '>'; i++; continue; }
